@@ -5,6 +5,7 @@ symbols_file_path = "./waverace.syms.toml"
 rom_file_path = "waverace.us.z64"
 output_func_path = "RecompiledFuncs"
 use_absolute_symbols = true
+relocatable_sections_path = "waverace.overlays.txt"
 
 [patches]
 # ALL problematic functions go here - N64Recomp generates empty stubs
