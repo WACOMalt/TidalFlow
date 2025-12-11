@@ -1,0 +1,143 @@
+# Config file for Wave Race 64 NTSC Recompilation.
+[input]
+entrypoint = 0x80046800
+symbols_file_path = "./waverace.syms.toml"
+rom_file_path = "waverace.us.z64"
+output_func_path = "RecompiledFuncs"
+use_absolute_symbols = true
+
+[patches]
+# ALL problematic functions go here - N64Recomp generates empty stubs
+# This includes: CACHE/COP0/BREAK instructions AND overlay-calling functions
+stubs = [
+    # RSP MMIO access functions - read/write to 0xA410000C (SP_STATUS)
+    "func_800C5DA0",  # __osSpGetStatus - reads SP_STATUS register (MMIO)
+    "func_800C6300",  # __osSpSetStatus - writes to RSP hardware register
+
+    # Libultra internal scheduling functions (access __osActiveQueue at 0x800E9010)
+    "func_800CBF20",  # __osGetActiveQueue - accesses libultra internal state
+    # NOTE: osSetThreadPri, osCreateViManager, osCreatePiManager, osViBlack - now named in syms.toml for runtime redirect
+
+    # PI Manager internal functions - runtime handles the manager creation
+    "func_800CC2B0",  # __osPiCreateAccessQueue - runtime handles internally
+    "func_800CC450",  # __osDevMgrMain - runtime handles internally
+
+    # Functions with CACHE/COP0/BREAK instructions
+    "func_80047F90",
+    "func_8004A3C0",
+    "func_8004B6E0",
+    "func_8004BA18",
+    "func_8004CC7C",
+    "func_8004D018",
+    "func_8004D30C",
+    "func_8004E0A4",
+    "func_8004EFB4",
+    "func_8004F3D4",
+    "func_8004F520",
+    "func_80050F8C",
+    "func_80069A70",
+    "func_8006A300",
+    "func_8006D034",
+    "func_8006E3A8",
+    "func_8007A8A8",
+    "func_8007A980",
+    "func_8007AAAC",
+    "func_80088EA8",
+    "func_8008E794",
+    "func_8008FB74",
+    "func_80090F58",
+    "func_800916B4",
+    "func_80097F74",
+    "func_80098714",
+    "func_800A68A4",
+    "func_800AC184",
+    "func_800B4DD0",
+    "func_800B527C",
+    "func_800B6F18",
+    "func_800B86C4",
+    "func_800BB24C",
+    "func_800C010C",
+    "func_800C4C40",
+    # NOTE: osSendMesg (0x800C57A0) and osRecvMesg (0x800C5C60) - now use runtime stubs via syms.toml naming
+    # NOTE: These are now reimplemented in runtime (removed from stubs):
+    # - osWritebackDCacheAll (0x800C6740), osInvalDCache (0x800CA2C0)
+    # - __osDisableInt (0x800CAAD0), __osRestoreInt (0x800CAAF0), osGetCount (0x800CB3C0)
+    "func_800CA480",
+    "func_800CA5A0",
+    "func_800CAA10",
+    "func_800CAB10",
+    "func_800CB0A8",
+    # __osEnqueueAndYield, __osDispatchThread - already in ignored_funcs (symbol_lists.cpp)
+    "func_800CBD90",
+    "func_800CC5D0",
+    "func_800CC5E0",
+    "func_800CC600",
+    "func_800CC650",
+    "func_800CC6A0",
+    "func_800CC700",
+    "func_800CC78C",
+    "func_800CC7C8",
+    "func_800CC86C",
+    "func_800CC8C8",
+    # osJamMesg (0x800D0560) - reimplemented
+    # __osSetCompare (0x800D0E20) - ignored
+    "func_800D09A8",
+    "func_800D0E30",
+    "func_800D0E60",
+    "func_800D19C0",
+    "func_800D20B0",
+    "func_800D2120",
+    # Functions that call overlay/RSP code (0x801xxxxx, 0x84xxxxxx)
+    "func_80069594",
+    "func_8006A748",
+    "func_8006B334",
+    "func_8006BE74",
+    "func_8006C5D8",
+    "func_8006CB98",
+    "func_8006CDE8",
+    "func_8006D494",
+    "func_8006E0F4",
+    "func_8006E674",
+    "func_800735EC",
+    "func_800744EC",
+    "func_80075274",
+    "func_80075310",
+    "func_800783AC",
+    "func_80079528",
+    "func_80088B84",
+    "func_80091F50",
+    "func_800922E4",
+    "func_800926F4",
+    "func_80092CF0",  # Calls overlay 0x801ECAF4 - stub patched by patch_stubs.py
+    "func_80093104",
+    "func_800933C4",
+    "func_80094088",
+    "func_80098918",
+    "func_8009898C",
+    "func_80098FF8",
+    "func_80099D94",
+    "func_8009D3AC",
+    "func_8009DC10",
+    "func_8009E814",
+    "func_8009F398",
+    "func_8009FCB0",
+    "func_800A063C",
+    "func_800A10E4",
+    "func_800A16F0",
+    "func_800A1CFC",
+    "func_800A2308",
+    "func_800AE7C4",
+    "func_800AF51C",
+    "func_800AF798",
+    "func_800AFBD0",
+    "func_800B08F8",
+    "func_800B2ABC",
+    "func_800B305C",
+    "func_800B4788",
+    "func_800B4ABC",
+    "func_800D2220",
+]
+
+# Functions that need custom implementations
+# For now empty - func_80092CF0 moved back to stubs for linking
+ignored = []
