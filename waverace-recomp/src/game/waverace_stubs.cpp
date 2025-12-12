@@ -18,6 +18,7 @@ static int global_frame_count = 0;
 static int ovl_801ECAF4_calls = 0;
 static int ovl_801E7C58_calls = 0;
 static int ovl_801E270C_calls = 0;
+static int ovl_802C5BA4_calls = 0;
 
 // Main function call counters
 static int func_80092CF0_calls = 0;
@@ -27,8 +28,79 @@ static int render_thread_started = 0;
 static int func_80046DA0_calls = 0;
 static int game_thread_entry_calls = 0;
 
+// State tracking
+static uint32_t last_game_state = 0xFFFFFFFF;
+static int state_change_count = 0;
+
 // Debug helper to print every N calls
 #define DEBUG_INTERVAL 60  // Print status every 60 frames (~1 second)
+
+// ============================================================================
+// MEMORY ADDRESSES - Important game variables
+// ============================================================================
+// D_800DAB24 = Game state (0=menu, 5=boot, 6=logo, 7=title, etc.)
+// D_801CE63C = Boot sequence flag (controls framebuffer clear)
+// D_80151944 = Current display list pointer
+// D_80154100 = Message queue for render thread
+
+#define ADDR_GAME_STATE      0x000DAB24  // D_800DAB24 - main game state
+#define ADDR_BOOT_FLAG       0x001CE63C  // D_801CE63C - boot sequence control
+#define ADDR_DL_PTR          0x00151944  // D_80151944 - display list pointer
+#define ADDR_FRAME_COUNT     0x000D4620  // Frame counter (approximate)
+
+// ============================================================================
+// Helper functions
+// ============================================================================
+
+static inline uint32_t read_u32(uint8_t* rdram, uint32_t addr) {
+    return *(uint32_t*)(rdram + addr);
+}
+
+static inline void write_u32(uint8_t* rdram, uint32_t addr, uint32_t val) {
+    *(uint32_t*)(rdram + addr) = val;
+}
+
+// Print current game status - call this periodically
+static void print_game_status(uint8_t* rdram, const char* caller) {
+    uint32_t game_state = read_u32(rdram, ADDR_GAME_STATE);
+    uint32_t boot_flag = read_u32(rdram, ADDR_BOOT_FLAG);
+    uint32_t dl_ptr = read_u32(rdram, ADDR_DL_PTR);
+
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║  GAME STATUS (called from: %s)\n", caller);
+    printf("╠══════════════════════════════════════════════════════════════╣\n");
+    printf("║  Game State (D_800DAB24): %d (0x%X)\n", game_state, game_state);
+    printf("║  Boot Flag  (D_801CE63C): %d\n", boot_flag);
+    printf("║  DL Pointer (D_80151944): 0x%08X\n", dl_ptr);
+    printf("║  State changes so far: %d\n", state_change_count);
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+    printf("\n");
+    fflush(stdout);
+}
+
+// Check for state change and report
+static void check_state_change(uint8_t* rdram, const char* caller) {
+    uint32_t game_state = read_u32(rdram, ADDR_GAME_STATE);
+
+    if (game_state != last_game_state) {
+        state_change_count++;
+        printf("\n");
+        printf("████████████████████████████████████████████████████████████████\n");
+        printf("██  STATE CHANGE DETECTED! #%d\n", state_change_count);
+        printf("██  From: %d (0x%X) -> To: %d (0x%X)\n",
+               last_game_state, last_game_state, game_state, game_state);
+        printf("██  Caller: %s\n", caller);
+        printf("████████████████████████████████████████████████████████████████\n");
+        printf("\n");
+        fflush(stdout);
+
+        last_game_state = game_state;
+
+        // Print full status on state change
+        print_game_status(rdram, caller);
+    }
+}
 
 // ============================================================================
 // Thread entry debug hooks
@@ -136,54 +208,71 @@ static inline uint32_t bswap32(uint32_t x) {
 // This is a stub for func_80092CF0 which is a big state machine that calls
 // different display list builders based on D_800DAB24 (game state variable).
 //
-// State 0: Calls 0x801E overlay functions (which we HAVE recompiled!)
-// State 5,6: Calls 0x802C overlay func_802C5BA4 (segment_1B1FB0) - NOW IMPLEMENTED!
-// State 0: Calls 0x801E overlay ovl_func_801ECAF4 (codeseg)
-// Other states: Need different 0x802C overlays (not yet implemented)
+// ┌─────────────────────────────────────────────────────────────────────────┐
+// │  STATE → OVERLAY MAPPING                                                │
+// ├─────────────────────────────────────────────────────────────────────────┤
+// │  State 0:    0x801E overlay (ovl_func_801ECAF4) - Menu/gameplay         │
+// │  State 5,6:  0x802C overlay (segment_1B1FB0) - Boot/intro    ◄── NOW!  │
+// │  State 7:    0x802C overlay (ovl_i1) - Title screen          NOT IMPL   │
+// │  Other:      Various 0x802C overlays                         NOT IMPL   │
+// └─────────────────────────────────────────────────────────────────────────┘
 // ============================================================================
 
 // Forward declarations for REAL overlay functions
 extern "C" void ovl_func_801ECAF4(uint8_t* rdram, recomp_context* ctx);  // 0x801E overlay (codeseg)
 extern "C" void ovl_func_802C5BA4(uint8_t* rdram, recomp_context* ctx);  // 0x802C overlay (segment_1B1FB0) - State 5,6!
 
-// Helper to read game state variable D_800DAB24
-// NOTE: The recompiled code uses native byte order, so we read directly
-static inline uint32_t read_game_state(uint8_t* rdram) {
-    uint32_t addr = 0x000DAB24;  // D_800DAB24 physical address
-    return *(uint32_t*)(rdram + addr);
-}
-
 extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
     static int call_count = 0;
     call_count++;
+    global_frame_count = call_count;
 
-    // Read raw value for debugging
-    uint32_t addr = 0x000DAB24;  // D_800DAB24 physical address
-    uint32_t raw_val = *(uint32_t*)(rdram + addr);
-    uint32_t game_state = read_game_state(rdram);
+    // Read game state
+    uint32_t game_state = read_u32(rdram, ADDR_GAME_STATE);
+    uint32_t boot_flag = read_u32(rdram, ADDR_BOOT_FLAG);
     uint32_t dl_ptr_in = (uint32_t)ctx->r4;
 
-    // DEBUG output - ALWAYS print first 20 calls
-    if (call_count <= 20 || call_count % DEBUG_INTERVAL == 0) {
-        printf("[DL-IMPL] func_80092CF0_impl #%d: raw=0x%08X, state=%d (0x%X), dl_ptr_in=0x%08X\n",
-               call_count, raw_val, game_state, game_state, dl_ptr_in);
+    // Check for state changes
+    check_state_change(rdram, "func_80092CF0_impl");
+
+    // DEBUG output - ALWAYS print first 30 calls, then every DEBUG_INTERVAL
+    if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
+        printf("┌────────────────────────────────────────────────────────────────┐\n");
+        printf("│ [DL-IMPL] func_80092CF0_impl FRAME #%d\n", call_count);
+        printf("├────────────────────────────────────────────────────────────────┤\n");
+        printf("│  Game State: %d (0x%X)\n", game_state, game_state);
+        printf("│  Boot Flag:  %d\n", boot_flag);
+        printf("│  DL Input:   0x%08X\n", dl_ptr_in);
+
+        // Show which overlay will be called
+        const char* overlay_name = "UNKNOWN";
+        const char* overlay_status = "NOT IMPLEMENTED";
+        if (game_state == 0) {
+            overlay_name = "ovl_func_801ECAF4 (0x801E codeseg)";
+            overlay_status = "IMPLEMENTED";
+        } else if (game_state == 5 || game_state == 6) {
+            overlay_name = "ovl_func_802C5BA4 (0x802C segment_1B1FB0)";
+            overlay_status = "IMPLEMENTED";
+        } else if (game_state == 7 || game_state == 0x28) {
+            overlay_name = "ovl_i1 (0x802C)";
+        } else if (game_state == 2) {
+            overlay_name = "ovl_i0 (0x802C)";
+        }
+        printf("│  Overlay:    %s\n", overlay_name);
+        printf("│  Status:     %s\n", overlay_status);
+        printf("└────────────────────────────────────────────────────────────────┘\n");
         fflush(stdout);
     }
 
-    // HACK: Force state 0 to test 0x801E overlay
-    // This bypasses state 5 (which needs 0x802C overlay) and tests our 0x801E overlay
-    // NOTE: Disabled because ovl_func_801ECAF4 crashes - needs investigation
-    // game_state = 0;  // FORCE STATE 0! (crashes)
-
     // STATE 0: Call the REAL 0x801E overlay function!
     if (game_state == 0) {
-        if (call_count <= 20) {
-            printf("[DL-IMPL] >>> CALLING REAL OVERLAY ovl_func_801ECAF4 (0x801E)!\n");
+        if (call_count <= 30) {
+            printf(">>> [STATE 0] CALLING ovl_func_801ECAF4 (0x801E overlay)...\n");
             fflush(stdout);
         }
         ovl_func_801ECAF4(rdram, ctx);
-        if (call_count <= 20) {
-            printf("[DL-IMPL] <<< RETURNED from ovl_func_801ECAF4, r2=0x%08X\n", (uint32_t)ctx->r2);
+        if (call_count <= 30) {
+            printf("<<< [STATE 0] RETURNED from ovl_func_801ECAF4, r2=0x%08X\n", (uint32_t)ctx->r2);
             fflush(stdout);
         }
         return;
@@ -192,21 +281,47 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
     // STATE 5,6: Call the REAL 0x802C overlay function (segment_1B1FB0)!
     // This is the boot/intro state - should clear framebuffer and show Nintendo logo sequence
     if (game_state == 5 || game_state == 6) {
-        if (call_count <= 20) {
-            printf("[DL-IMPL] >>> CALLING REAL OVERLAY ovl_func_802C5BA4 (0x802C segment_1B1FB0)!\n");
+        ovl_802C5BA4_calls++;
+
+        if (call_count <= 30) {
+            printf(">>> [STATE %d] CALLING ovl_func_802C5BA4 (0x802C segment_1B1FB0)...\n", game_state);
+            printf("    This overlay handles: boot sequence, framebuffer clear, logo\n");
             fflush(stdout);
         }
+
         ovl_func_802C5BA4(rdram, ctx);
-        if (call_count <= 20) {
-            printf("[DL-IMPL] <<< RETURNED from ovl_func_802C5BA4, r2=0x%08X\n", (uint32_t)ctx->r2);
+
+        uint32_t dl_ptr_out = (uint32_t)ctx->r2;
+        uint32_t dl_size = dl_ptr_out - dl_ptr_in;
+
+        if (call_count <= 30) {
+            printf("<<< [STATE %d] RETURNED from ovl_func_802C5BA4\n", game_state);
+            printf("    DL output: 0x%08X (wrote %d bytes = %d commands)\n",
+                   dl_ptr_out, dl_size, dl_size / 8);
             fflush(stdout);
         }
+
+        // Check if boot flag changed (indicates progress in boot sequence)
+        uint32_t new_boot_flag = read_u32(rdram, ADDR_BOOT_FLAG);
+        if (new_boot_flag != boot_flag) {
+            printf("!!! BOOT FLAG CHANGED: %d -> %d\n", boot_flag, new_boot_flag);
+            fflush(stdout);
+        }
+
         return;
     }
 
     // OTHER STATES: Need different 0x802C overlays (ovl_i0, ovl_i1, etc.)
-    if (call_count <= 20 || call_count % DEBUG_INTERVAL == 0) {
-        printf("[DL-IMPL] State %d needs different 0x802C overlay (not implemented), generating FAKE cycling DL\n", game_state);
+    if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
+        printf("!!! [STATE %d] OVERLAY NOT IMPLEMENTED - generating placeholder DL\n", game_state);
+        printf("    Need to implement: ");
+        switch (game_state) {
+            case 2:  printf("ovl_i0\n"); break;
+            case 7:
+            case 0x28: printf("ovl_i1 (title screen)\n"); break;
+            case 0xA: printf("ovl_i2\n"); break;
+            default: printf("overlay for state %d\n", game_state); break;
+        }
         fflush(stdout);
     }
 
