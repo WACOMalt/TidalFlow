@@ -302,10 +302,77 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
             fflush(stdout);
         }
 
+        // Call the overlay function first (don't modify r4 beforehand!)
         ovl_func_802C5BA4(rdram, ctx);
 
         uint32_t dl_ptr_out = (uint32_t)ctx->r2;
         uint32_t dl_size = dl_ptr_out - dl_ptr_in;
+
+        // DEBUG: Dump first 20 DL commands to see what the overlay generated
+        if (call_count <= 5) {
+            uint32_t dl_phys = dl_ptr_in & 0x1FFFFFFF;
+            uint32_t* dl = (uint32_t*)(rdram + dl_phys);
+            int num_cmds = (dl_size / 8);
+            if (num_cmds > 20) num_cmds = 20;
+            printf("\n=== DISPLAY LIST DUMP (first %d commands) ===\n", num_cmds);
+            for (int i = 0; i < num_cmds; i++) {
+                uint32_t w0 = dl[i*2];
+                uint32_t w1 = dl[i*2 + 1];
+                uint8_t cmd = (w0 >> 24) & 0xFF;
+                printf("  [%3d] %08X %08X", i, w0, w1);
+                // Identify common commands
+                switch (cmd) {
+                    case 0x00: printf("  (G_NOOP)"); break;
+                    case 0x01: printf("  (G_MTX)"); break;
+                    case 0x03: printf("  (G_MOVEMEM)"); break;
+                    case 0x04: printf("  (G_VTX)"); break;
+                    case 0x06: printf("  (G_DL) -> segmented addr 0x%08X", w1); break;
+                    case 0xB6: printf("  (G_CLEARGEOMETRYMODE)"); break;
+                    case 0xB7: printf("  (G_SETGEOMETRYMODE)"); break;
+                    case 0xB8: printf("  (G_ENDDL)"); break;
+                    case 0xBA: printf("  (G_SETOTHERMODE_L)"); break;
+                    case 0xBB: printf("  (G_SETOTHERMODE_H)"); break;
+                    case 0xBC: printf("  (G_MOVEWORD - F3D)");
+                        if (((w0 >> 16) & 0xFF) == 0x06) {
+                            printf(" SEGMENT %d = 0x%08X", (w0 >> 8) & 0xF, w1);
+                        }
+                        break;
+                    case 0xDB: printf("  (G_MOVEWORD - F3DEX2)");
+                        if (((w0 >> 16) & 0xFF) == 0x06) {
+                            printf(" SEGMENT %d = 0x%08X", (w0 >> 2) & 0xF, w1);
+                        }
+                        break;
+                    case 0xE4: printf("  (G_TEXRECT)"); break;
+                    case 0xE6: printf("  (G_RDPLOADSYNC)"); break;
+                    case 0xE7: printf("  (G_RDPPIPESYNC)"); break;
+                    case 0xE8: printf("  (G_RDPTILESYNC)"); break;
+                    case 0xE9: printf("  (G_RDPFULLSYNC)"); break;
+                    case 0xED: printf("  (G_SETSCISSOR)"); break;
+                    case 0xEF: printf("  (G_SETOTHERMODE)"); break;
+                    case 0xF0: printf("  (G_LOADTLUT)"); break;
+                    case 0xF2: printf("  (G_SETTILESIZE)"); break;
+                    case 0xF3: printf("  (G_LOADBLOCK)"); break;
+                    case 0xF4: printf("  (G_LOADTILE)"); break;
+                    case 0xF5: printf("  (G_SETTILE)"); break;
+                    case 0xF6: printf("  (G_FILLRECT)"); break;
+                    case 0xF7: printf("  (G_SETFILLCOLOR)"); break;
+                    case 0xF8: printf("  (G_SETFOGCOLOR)"); break;
+                    case 0xF9: printf("  (G_SETBLENDCOLOR)"); break;
+                    case 0xFA: printf("  (G_SETPRIMCOLOR)"); break;
+                    case 0xFB: printf("  (G_SETENVCOLOR)"); break;
+                    case 0xFC: printf("  (G_SETCOMBINE)"); break;
+                    case 0xFD: printf("  (G_SETTIMG)"); break;
+                    case 0xFE: printf("  (G_SETZIMG)"); break;
+                    case 0xFF: printf("  (G_SETCIMG)"); break;
+                    default: printf("  (unknown cmd 0x%02X)", cmd); break;
+                }
+                printf("\n");
+                // Stop at G_ENDDL
+                if (cmd == 0xB8) break;
+            }
+            printf("=== END DUMP ===\n\n");
+            fflush(stdout);
+        }
 
         // Read fade counter AFTER overlay runs to see if it changed
         uint32_t fade_counter_after = *(uint32_t*)(rdram + 0x002C76F4);
@@ -348,6 +415,9 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
         }
 
         // AUTO-ADVANCE state 6 -> 2 (to ovl_i0) after 3 frames in state 6
+        // DISABLED: ovl_i0 not implemented yet, causes crash
+        // TODO: Implement ovl_i0 overlay (ROM 0x1B3EC0 - 0x1B55A0)
+        /*
         static int state6_frames = 0;
         if (game_state == 6) {
             state6_frames++;
@@ -365,6 +435,7 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
                 write_u32(rdram, ADDR_BOOT_FLAG, 1);
             }
         }
+        */
 
         return;
     }
