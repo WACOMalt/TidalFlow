@@ -1046,3 +1046,57 @@ functions = [
     { name = "ovl_func_801FC39C", vram = 0x801FC39C, size = 0x138 },
     { name = "ovl_func_801FC4D4", vram = 0x801FC4D4, size = 0x368 },
 ]
+
+
+# 0x802C Overlay - segment_1B1FB0 (State 5 - Boot/Intro)
+# HYPOTHESIS: State 5 loads gOverlayTable[0] = segment_1B1FB0
+# This should contain func_802C5BA4 which is called for state 5 display list
+# ROM: 0x1B1FB0 - 0x1B3EC0, VRAM: 0x802C5800 - 0x802C7660
+[[section]]
+name = ".ovl_802C_state5"
+rom = 0x001B1FB0
+vram = 0x802C5800
+size = 0x1F10
+
+functions = [
+    # Functions from asm/nonmatchings/unused_code_1B1FB0/
+    { name = "ovl_func_802C5800", vram = 0x802C5800, size = 0x3A4 },
+    { name = "ovl_func_802C5BA4", vram = 0x802C5BA4, size = 0x250 },
+    { name = "ovl_func_802C5DF4", vram = 0x802C5DF4, size = 0x4F0 },
+    { name = "ovl_func_802C62E4", vram = 0x802C62E4, size = 0x4D8 },
+    { name = "ovl_func_802C67BC", vram = 0x802C67BC, size = 0x1B4 },
+    { name = "ovl_func_802C6970", vram = 0x802C6970, size = 0x2AC },
+    { name = "ovl_func_802C6C1C", vram = 0x802C6C1C, size = 0x224 },
+    { name = "ovl_func_802C6E40", vram = 0x802C6E40, size = 0x1B8 },
+    { name = "ovl_func_802C6FF8", vram = 0x802C6FF8, size = 0x1C0 },
+    { name = "ovl_func_802C71B8", vram = 0x802C71B8, size = 0x14C },
+    # Functions from unused_code_1B1FB0.c (decompiled)
+    { name = "ovl_func_802C7304", vram = 0x802C7304, size = 0xAC },
+    { name = "ovl_func_802C73B0", vram = 0x802C73B0, size = 0x160 },
+    { name = "ovl_func_802C7510", vram = 0x802C7510, size = 0x68 },
+    { name = "ovl_func_802C7578", vram = 0x802C7578, size = 0xE8 },
+]
+
+# Other 0x802C overlay functions - declared but not defined (for other states)
+# These are in OTHER overlays that share the same VRAM address
+# Will be stubbed until those overlays are implemented
+declared_funcs = [
+    { name = "func_802C583C", vram = 0x802C583C },
+    { name = "func_802C5924", vram = 0x802C5924 },
+    { name = "func_802C5968", vram = 0x802C5968 },
+    { name = "func_802C5A7C", vram = 0x802C5A7C },
+    { name = "func_802C5AE4", vram = 0x802C5AE4 },
+    { name = "func_802C5B40", vram = 0x802C5B40 },
+    { name = "func_802C5B4C", vram = 0x802C5B4C },
+    { name = "func_802C5B74", vram = 0x802C5B74 },
+    { name = "func_802C5B78", vram = 0x802C5B78 },
+    { name = "func_802C5C1C", vram = 0x802C5C1C },
+    { name = "func_802C5D24", vram = 0x802C5D24 },
+    { name = "func_802C5D3C", vram = 0x802C5D3C },
+    { name = "func_802C5F50", vram = 0x802C5F50 },
+    { name = "func_802C5F6C", vram = 0x802C5F6C },
+    { name = "func_802C6944", vram = 0x802C6944 },
+    { name = "func_802C7484", vram = 0x802C7484 },
+    { name = "func_802C7D00", vram = 0x802C7D00 },
+    { name = "func_802C913C", vram = 0x802C913C },
+]
