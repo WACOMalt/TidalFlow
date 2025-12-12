@@ -155,7 +155,7 @@ stubs = [
     "ovl_func_801E68EC",
     "ovl_func_801E4440",
     # NOTE: 0x802C overlay functions are declared in waverace.syms.toml as declared_funcs
-    # They will be linked to stubs in waverace_stubs.cpp
+    # ovl_i0 overlay functions are in 'ignored' list - custom impl in waverace_stubs.cpp
 ]
 
 # Functions that have custom implementations in waverace_stubs.cpp
@@ -163,4 +163,13 @@ stubs = [
 ignored = [
     "func_800C7020",  # Controller poll with timer - custom impl fixes 185-hour bug
     "func_80046BF4",  # DL finalizer - custom impl with safety check for null pointer
+    # ovl_i0 overlay functions - custom stubs in waverace_stubs.cpp
+    "func_i0_802C5800",
+    "func_i0_802C5A7C",
+    "func_i0_802C6044",
+    "func_i0_802C63AC",
+    "func_i0_802C6878",
+    "func_i0_802C6944",
+    "func_i0_802C6A1C",
+    "func_i0_802C6AE4",
 ]

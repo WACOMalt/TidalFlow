@@ -15,11 +15,25 @@ Dit is een N64 game recompilatie project dat **N64Recomp** en **RT64** gebruikt 
 - **Config:** `waverace-recomp/waverace.toml`
 - **Gegenereerde code:** `waverace-recomp/RecompiledFuncs/`
 
-### Decompilatie (voor referentie)
-Zoek naar een `Wave-Race-64` decompilatie folder in een parallelle locatie:
-- **src/** - Gedecompileerde C code
-- **asm/nonmatchings/** - Originele assembly code
-- **include/** - Headers
+### Decompilatie (ESSENTIEEL voor referentie)
+**BELANGRIJK:** We hebben een volledige decompilatie beschikbaar! Gebruik deze als referentie voor functies, structuren, en overlay informatie.
+
+**Pad:** `C:\Users\User\Documents\decompilations\wave-race-64-n64-claude-code-opus-45\Wave-Race-64\`
+
+Belangrijke bestanden:
+- **src/overlays/** - Gedecompileerde overlay code (ovl_i0, ovl_i1, etc.)
+- **src/sys/** - Systeem functies
+- **src/assets/** - Asset definities
+- **src/ovl_table.c** - **KRITISCH!** Complete overlay table met ROM/VRAM adressen
+- **asm/nonmatchings/** - Originele assembly waar decomp niet matched
+- **include/** - Headers met structuren en defines
+
+**Overlay informatie uit decomp:**
+De `ovl_table.c` bevat `gOverlayTable[]` met alle 19 overlays en hun exacte:
+- ROM start/end adressen
+- VRAM adressen
+- BSS sizes
+- Init functies
 
 ### Documentatie
 - **Session docs:** `chris docs/hypotheses/SESSION_*.md`
@@ -28,26 +42,55 @@ Zoek naar een `Wave-Race-64` decompilatie folder in een parallelle locatie:
 
 ### Stap 1: Lees de Documentatie
 
-**BELANGRIJK:** Zoek eerst de meest recente SESSION_*.md bestanden (hoogste nummer = nieuwste):
-```bash
-ls -lt "chris docs/hypotheses/" | grep SESSION | head -5
-```
+**BELANGRIJK:** Lees ALTIJD deze documenten voordat je begint:
 
-Lees dan:
-1. De **meest recente SESSION_*.md** bestanden (hoogste nummers eerst) - Dit bevat de laatste bevindingen en huidige status
-2. `waverace-recomp/src/game/waverace_stubs.cpp` - Huidige implementatie
+1. **`chris docs/N64RECOMP_GUIDE.md`** - Essentiële referentie voor N64Recomp configuratie, stubs vs ignored, syms.toml format, etc.
+2. **Meest recente SESSION_*.md** - Zoek hoogste nummer:
+   ```bash
+   ls -lt "chris docs/hypotheses/" | grep SESSION | head -5
+   ```
+3. **`waverace-recomp/src/game/waverace_stubs.cpp`** - Huidige implementatie
 
 De sessie bestanden bevatten cumulatieve kennis. Lees minstens de laatste 2-3 sessies om te begrijpen waar het project staat.
 
+**N64RECOMP_GUIDE.md bevat kritieke info over:**
+- Verschil tussen `stubs` (lege stub gegenereerd) en `ignored` (helemaal niet gegenereerd)
+- Hoe syms.toml functies te definiëren
+- Veelvoorkomende problemen en oplossingen
+- Build proces en commando's
+
 ### Stap 2: Bouw en Test
 
-```bash
-# Build
-cd waverace-recomp
-wsl bash -c "cmake --build build -j 24"
+**BELANGRIJK:** Dit project wordt gebouwd via WSL (Windows Subsystem for Linux). De build instructies staan ook altijd in de meest recente SESSION_*.md zodat je direct kunt bouwen.
 
-# Test (met timeout)
-wsl bash -c "timeout 15 ./build/WaveRace64Recompiled 2>&1 | head -100"
+#### WSL Build
+
+```bash
+# Navigeer naar project (WSL path)
+cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp
+
+# Build (eerste keer - configure + build)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j$(nproc)
+
+# Build (vervolg builds)
+cmake --build build -j$(nproc)
+```
+
+#### N64Recomp (als je syms.toml of waverace.toml wijzigt)
+```bash
+# Eerst N64Recomp draaien om C code te regenereren
+cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp
+../N64Recomp/build/N64Recomp waverace.toml
+```
+
+#### Test
+```bash
+# Vanuit waverace-recomp directory
+./build/WaveRace64Recompiled
+
+# Of met timeout voor automatische tests
+timeout 15 ./build/WaveRace64Recompiled 2>&1 | head -100
 ```
 
 ### Stap 3: Analyseer de Output
@@ -89,6 +132,64 @@ Maak een nieuwe `SESSION_N_[BESCHRIJVING].md` in `chris docs/hypotheses/` met:
 git add <gewijzigde bestanden>
 git commit -m "Session N: <korte beschrijving>"
 ```
+
+## N64Recomp Configuratie (KRITIEK)
+
+### stubs vs ignored in waverace.toml
+
+**Dit is DE belangrijkste les voor dit project!**
+
+| Configuratie | Wat het doet | Wanneer gebruiken |
+|--------------|--------------|-------------------|
+| `stubs = ["func"]` | N64Recomp genereert LEGE stub | Hardware/MMIO/COP0 functies die niet vertaald kunnen worden |
+| `ignored = ["func"]` | N64Recomp genereert NIETS | Functies waarvoor JIJ een custom implementatie schrijft in `waverace_stubs.cpp` |
+
+**FOUT die vaak gemaakt wordt:**
+```toml
+# VERKEERD - functie staat in BEIDE lijsten
+stubs = ["func_X"]
+ignored = ["func_X"]  # FOUT! Kies EEN van de twee!
+```
+
+**Correct gebruik:**
+```toml
+# Functies die N64Recomp niet KAN vertalen (MMIO, cache, etc.)
+# N64Recomp genereert lege stub
+stubs = [
+    "__osSpGetStatus",  # RSP register access
+    "osWritebackDCache", # Cache instructies
+]
+
+# Functies waarvoor WIJ custom code schrijven in waverace_stubs.cpp
+# N64Recomp genereert NIETS - wij leveren de implementatie
+ignored = [
+    "func_800C7020",  # Custom timer fix
+    "func_i0_802C5800",  # Custom overlay stub
+]
+```
+
+### Static variabelen
+
+N64Recomp genereert automatisch static variabelen (bijv. `static_0_80094088`) in de funcs_*.c bestanden. **Definieer deze NOOIT opnieuw** in waverace_stubs.cpp!
+
+### syms.toml format
+
+```toml
+[[section]]
+name = ".ovl_name"
+rom = 0x001B3EC0    # Offset in ROM bestand
+vram = 0x802C5800   # N64 VRAM adres waar code laadt
+size = 0x16E0       # Grootte van sectie
+
+functions = [
+    { name = "func_802C5800", vram = 0x802C5800, size = 0x27C },
+]
+```
+
+**KRITIEK:**
+- `rom` = waar in de ROM file (physical offset)
+- `vram` = waar de N64 de code laadt in geheugen
+- Gebruik de **decomp** (`ovl_table.c`) voor correcte adressen!
 
 ## N64 Technische Concepten
 
