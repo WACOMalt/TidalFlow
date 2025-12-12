@@ -171,6 +171,7 @@ namespace RT64 {
         GBIFunction func;
         int cmd_count = 0;
         int max_commands = 50000; // Safety limit to prevent infinite loops
+
         while (dl != nullptr && cmd_count < max_commands) {
             opCode = (dl->w0 >> 24);
             cmd_count++;

@@ -30,21 +30,31 @@ namespace RT64 {
         }
 
         void tri1(State *state, DisplayList **dl) {
-            uint8_t v0 = (*dl)->p1(16, 8) / 5;
-            uint8_t v1 = (*dl)->p1(8, 8) / 5;
-            uint8_t v2 = (*dl)->p1(0, 8) / 5;
-            // Safety bounds check - DL might walk into garbage data
-            // Wave Race typically loads 32 vertices at a time, max valid index is ~31
-            // But some DLs load more, so use 48 as threshold
-            if (v0 >= 48 || v1 >= 48 || v2 >= 48) {
+            // Get raw indices BEFORE division
+            uint8_t raw_v0 = (*dl)->p1(16, 8);
+            uint8_t raw_v1 = (*dl)->p1(8, 8);
+            uint8_t raw_v2 = (*dl)->p1(0, 8);
+
+            // Safety bounds check on RAW indices
+            // Valid vertex indices should be multiples of 5 (0, 5, 10, 15, ...)
+            // Maximum vertex buffer is 32, so max raw index = 31*5 = 155 (0x9B)
+            // Raw indices >= 0xA0 (160) are likely garbage data
+            if (raw_v0 >= 0xA0 || raw_v1 >= 0xA0 || raw_v2 >= 0xA0) {
                 // Invalid vertex indices - likely parsing garbage data
-                // Skip this tri and terminate the DL by setting dl to nullptr
-                fprintf(stderr, "[F3DWAVE] tri1: Invalid indices %d,%d,%d (w1=0x%08X) - terminating DL\n",
-                        v0, v1, v2, (*dl)->w1);
-                fflush(stderr);
+                // Terminate the DL silently (don't spam logs)
+                static int err_count = 0;
+                if (err_count < 5) {
+                    fprintf(stderr, "[F3DWAVE] tri1: Invalid raw indices 0x%02X,0x%02X,0x%02X (w1=0x%08X) - terminating DL\n",
+                            raw_v0, raw_v1, raw_v2, (*dl)->w1);
+                    err_count++;
+                }
                 *dl = nullptr;
                 return;
             }
+
+            uint8_t v0 = raw_v0 / 5;
+            uint8_t v1 = raw_v1 / 5;
+            uint8_t v2 = raw_v2 / 5;
             state->rsp->drawIndexedTri(v0, v1, v2);
         }
 
