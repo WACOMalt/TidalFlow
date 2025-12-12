@@ -121,6 +121,8 @@ Mogelijke fix strategieen:
 ### Stap 6: Documenteer
 
 Maak een nieuwe `SESSION_N_[BESCHRIJVING].md` in `chris docs/hypotheses/` met:
+- **BELANGRIJK: Zet bovenaan de session doc:** "Lees eerst `chris docs/prompt.md` voor project context en build instructies!"
+- Build instructies (WSL commando's)
 - Wat je onderzocht hebt
 - Wat je gevonden hebt
 - Wat je gefixt hebt

@@ -1,5 +1,7 @@
 # Session 15: ovl_i0 Overlay Stubs & Documentation Update
 
+> **⚠️ VOOR AI: Lees eerst `chris docs/prompt.md` voor volledige project context, N64Recomp configuratie, en build instructies!**
+
 **Date:** December 2025
 **Status:** COMPLETE - Build succeeds, game runs
 
