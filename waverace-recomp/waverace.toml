@@ -117,9 +117,7 @@ stubs = [
     "func_80091F50",
     "func_800922E4",
     "func_800926F4",
-    # func_80092CF0 - STUBBED because it calls 0x802C overlay functions we don't have
-    # The _impl in waverace_stubs.cpp will call 0x801E overlay for state=0
-    "func_80092CF0",
+    # NOTE: func_80092CF0 moved to 'ignored' - custom impl in waverace_stubs.cpp
     # NOTE: Overlay stubs removed - testing with correct VRAM base (0x801DAFA0)
     # Added func_800AB92C to main code (was inside func_800AB890)
     "func_80093104",
@@ -163,6 +161,7 @@ stubs = [
 ignored = [
     "func_800C7020",  # Controller poll with timer - custom impl fixes 185-hour bug
     "func_80046BF4",  # DL finalizer - custom impl with safety check for null pointer
+    "func_80092CF0",  # Main DL state machine - custom impl calls correct overlay per state
     # ovl_i0 overlay functions - custom stubs in waverace_stubs.cpp
     "func_i0_802C5800",
     "func_i0_802C5A7C",

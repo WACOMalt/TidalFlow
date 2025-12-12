@@ -204,7 +204,7 @@ static inline uint32_t bswap32(uint32_t x) {
 }
 
 // ============================================================================
-// func_80092CF0_impl: Display list building - calls REAL overlay when possible
+// func_80092CF0: Display list building - calls REAL overlay when possible
 // ============================================================================
 //
 // This is a stub for func_80092CF0 which is a big state machine that calls
@@ -225,7 +225,7 @@ extern "C" void ovl_func_801ECAF4(uint8_t* rdram, recomp_context* ctx);  // 0x80
 extern "C" void ovl_func_802C5BA4(uint8_t* rdram, recomp_context* ctx);  // 0x802C overlay (segment_1B1FB0) - State 5,6!
 extern "C" void func_i0_802C5800(uint8_t* rdram, recomp_context* ctx);   // 0x802C overlay (ovl_i0) - State 2!
 
-extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
+extern "C" void func_80092CF0(uint8_t* rdram, recomp_context* ctx) {
     static int call_count = 0;
     call_count++;
     global_frame_count = call_count;
@@ -236,12 +236,12 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
     uint32_t dl_ptr_in = (uint32_t)ctx->r4;
 
     // Check for state changes
-    check_state_change(rdram, "func_80092CF0_impl");
+    check_state_change(rdram, "func_80092CF0");
 
     // DEBUG output - ALWAYS print first 30 calls, then every DEBUG_INTERVAL
     if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
         printf("┌────────────────────────────────────────────────────────────────┐\n");
-        printf("│ [DL-IMPL] func_80092CF0_impl FRAME #%d\n", call_count);
+        printf("│ [DL-IMPL] func_80092CF0 FRAME #%d\n", call_count);
         printf("├────────────────────────────────────────────────────────────────┤\n");
         printf("│  Game State: %d (0x%X)\n", game_state, game_state);
         printf("│  Boot Flag:  %d\n", boot_flag);
