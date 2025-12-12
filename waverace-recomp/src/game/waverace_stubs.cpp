@@ -5,6 +5,37 @@
 #include "recomp.h"
 #include <cstdint>
 #include <atomic>
+#include <cstdio>
+
+// ============================================================================
+// DEBUG: Overlay function call tracking
+// ============================================================================
+static int ovl_801ECAF4_calls = 0;
+static int ovl_801E7C58_calls = 0;
+
+// These wrappers are called from patches to track overlay function execution
+extern "C" void debug_ovl_801ECAF4_entry(uint8_t* rdram, recomp_context* ctx) {
+    ovl_801ECAF4_calls++;
+    printf("[OVERLAY] ovl_func_801ECAF4 CALLED! (call #%d) r4=0x%08X\n",
+           ovl_801ECAF4_calls, (uint32_t)ctx->r4);
+    fflush(stdout);
+}
+
+extern "C" void debug_ovl_801E7C58_entry(uint8_t* rdram, recomp_context* ctx) {
+    ovl_801E7C58_calls++;
+    printf("[OVERLAY] ovl_func_801E7C58 CALLED! (call #%d) r4=0x%08X r5=0x%08X r6=0x%08X\n",
+           ovl_801E7C58_calls, (uint32_t)ctx->r4, (uint32_t)ctx->r5, (uint32_t)ctx->r6);
+    fflush(stdout);
+}
+
+// Debug: Track when func_80092CF0 is called (the function that should call overlay)
+static int func_80092CF0_calls = 0;
+extern "C" void debug_func_80092CF0_entry(uint8_t* rdram, recomp_context* ctx) {
+    func_80092CF0_calls++;
+    printf("[DEBUG] func_80092CF0 CALLED! (call #%d) r4=0x%08X - should call ovl_func_801ECAF4\n",
+           func_80092CF0_calls, (uint32_t)ctx->r4);
+    fflush(stdout);
+}
 
 // Sequence counter for events.cpp (used for debug timing)
 static std::atomic<uint64_t> global_sequence_counter{0};
@@ -142,6 +173,24 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
     } else {
         ctx->r2 = ctx->r4;
     }
+}
+
+// ============================================================================
+// ovl_func_801E270C: State machine / menu handler with switch statement
+// This function has a jump table at 0x80225F68 which is in BSS (not in ROM).
+// N64Recomp cannot analyze it.
+//
+// STUBBED: The original implementation tried to call overlay functions by name,
+// but those names don't match the actual recompiled function names due to VRAM
+// base address differences. For now, this is a simple stub that just returns.
+//
+// TODO: Map the correct overlay function names when display list support is needed.
+// ============================================================================
+extern "C" void ovl_func_801E270C_recomp(uint8_t* rdram, recomp_context* ctx) {
+    // Stubbed - just return without doing anything
+    // This function is called for menu state transitions
+    (void)rdram;
+    (void)ctx;
 }
 
 // func_800C5DA0: __osSpGetStatus - reads RSP SP_STATUS register (0xA410000C)

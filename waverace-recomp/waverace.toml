@@ -79,7 +79,9 @@ stubs = [
     "func_800CC78C",
     "func_800CC7C8",
     "func_800CC86C",
-    "func_800CC8C8",
+    "func_800CC8F8",
+    "func_800CC958",
+    "func_800CC9F4",
     # osJamMesg (0x800D0560) - reimplemented
     # __osSetCompare (0x800D0E20) - ignored
     "func_800D09A8",
@@ -109,10 +111,14 @@ stubs = [
     "func_80091F50",
     "func_800922E4",
     "func_800926F4",
-    "func_80092CF0",  # Calls overlay 0x801ECAF4 - stub patched by patch_stubs.py
+    # func_80092CF0 - calls 0x802C5BA4 which doesn't exist yet (802C overlay)
+    "func_80092CF0",
+    # NOTE: Overlay stubs removed - testing with correct VRAM base (0x801DAFA0)
+    # Added func_800AB92C to main code (was inside func_800AB890)
     "func_80093104",
     "func_800933C4",
-    "func_80094088",
+    "func_80094200",
+    "func_80094338",
     "func_80098918",
     "func_8009898C",
     "func_80098FF8",
@@ -137,6 +143,10 @@ stubs = [
     "func_800B4788",
     "func_800B4ABC",
     "func_800D2220",
+    "ovl_func_801F1CFC",
+    "ovl_func_801EB4F4",
+    "ovl_func_801E68EC",
+    "ovl_func_801E4440",
 ]
 
 # Functions that need custom implementations
