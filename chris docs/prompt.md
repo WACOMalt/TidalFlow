@@ -4,150 +4,179 @@ Je bent een reverse engineering expert die werkt aan de Wave Race 64 N64 recompi
 
 ## Project Context
 
-Dit is een N64 game recompilatie project dat N64Recomp en RT64 gebruikt om Wave Race 64 op moderne PC's te draaien. De game heeft een complex overlay systeem met 19 verschillende overlays die naar hetzelfde VRAM adres (0x802C5800) laden.
+Dit is een N64 game recompilatie project dat **N64Recomp** en **RT64** gebruikt om Wave Race 64 op moderne PC's te draaien. N64 games hebben vaak een complex overlay systeem waarbij verschillende code modules naar hetzelfde VRAM adres worden geladen afhankelijk van de game state.
 
 ## Belangrijke Locaties
 
 ### Recompilatie Project
-- **Project root:** `C:\Users\User\Documents\recompilations\wave-race-64-recomp-claude-code-opus45\waverace-recomp`
+- **Project root:** `waverace-recomp/`
 - **Stubs/custom code:** `waverace-recomp/src/game/waverace_stubs.cpp`
 - **Symbol definities:** `waverace-recomp/waverace.syms.toml`
 - **Config:** `waverace-recomp/waverace.toml`
 - **Gegenereerde code:** `waverace-recomp/RecompiledFuncs/`
 
 ### Decompilatie (voor referentie)
-- **Decomp root:** `C:\Users\User\Documents\decompilations\wave-race-64-n64-claude-code-opus-45\Wave-Race-64`
-- **Overlay table:** `Wave-Race-64/src/ovl_table.c` - Alle 19 overlay definities
-- **Overlay loading:** `Wave-Race-64/src/game/code_52990.c` - State ’ overlay mapping
-- **Assembly:** `Wave-Race-64/asm/nonmatchings/` - Originele assembly code
+Zoek naar een `Wave-Race-64` decompilatie folder in een parallelle locatie:
+- **src/** - Gedecompileerde C code
+- **asm/nonmatchings/** - Originele assembly code
+- **include/** - Headers
 
 ### Documentatie
 - **Session docs:** `chris docs/hypotheses/SESSION_*.md`
-- **Game flow:** `chris docs/hypotheses/GAME_FLOW_DIAGRAM.md`
-- **Complete overview:** `chris docs/hypotheses/SESSION_7_COMPLETE_OVERVIEW.md`
 
 ## Je Workflow
 
 ### Stap 1: Lees de Documentatie
-Lees EERST de volgende bestanden om de huidige status te begrijpen:
-1. `chris docs/hypotheses/SESSION_7_COMPLETE_OVERVIEW.md` - Volledig overzicht
-2. `chris docs/hypotheses/GAME_FLOW_DIAGRAM.md` - Visuele game flow
-3. De meest recente `SESSION_*.md` bestanden
-4. `waverace-recomp/src/game/waverace_stubs.cpp` - Huidige implementatie
+
+**BELANGRIJK:** Zoek eerst de meest recente SESSION_*.md bestanden (hoogste nummer = nieuwste):
+```bash
+ls -lt "chris docs/hypotheses/" | grep SESSION | head -5
+```
+
+Lees dan:
+1. De **meest recente SESSION_*.md** bestanden (hoogste nummers eerst) - Dit bevat de laatste bevindingen en huidige status
+2. `waverace-recomp/src/game/waverace_stubs.cpp` - Huidige implementatie
+
+De sessie bestanden bevatten cumulatieve kennis. Lees minstens de laatste 2-3 sessies om te begrijpen waar het project staat.
 
 ### Stap 2: Bouw en Test
+
 ```bash
 # Build
 cd waverace-recomp
 wsl bash -c "cmake --build build -j 24"
 
 # Test (met timeout)
-wsl bash -c "timeout 15 ./build/WaveRace64Recompiled 2>&1 | grep -E '(STATE|ERROR|CRASH|DL-IMPL)' | head -50"
+wsl bash -c "timeout 15 ./build/WaveRace64Recompiled 2>&1 | head -100"
 ```
 
 ### Stap 3: Analyseer de Output
+
 Kijk naar:
-- **Game state:** Waar zit de game? (D_800DAB24)
+- **Game state:** Welke state is de game?
 - **Errors/crashes:** Wat gaat er mis?
-- **Display list:** Wordt de DL correct gegenereerd?
-- **State transitions:** Gaat de game naar de volgende state?
+- **Display list:** Worden DL commands correct gegenereerd?
+- **State transitions:** Gaat de game naar volgende states?
 
 ### Stap 4: Debug als Reverse Engineer
+
 Denk als een reverse engineer:
 1. **Waar crasht het?** - Zoek de exacte locatie
 2. **Waarom crasht het?** - Analyseer de root cause
-3. **Wat verwacht de code?** - Kijk in de decomp
+3. **Wat verwacht de code?** - Kijk in de decomp assembly/C code
 4. **Hoe kunnen we het fixen?** - Implementeer een oplossing
 
 ### Stap 5: Implementeer Fixes
-Mogelijke fix strategieën:
+
+Mogelijke fix strategieen:
 - **Stub functie:** Voeg custom implementatie toe in `waverace_stubs.cpp`
 - **Overlay toevoegen:** Voeg nieuwe [[section]] toe in `waverace.syms.toml`
 - **State bypass:** Forceer state transition als iets geblokkeerd is
 - **Debug output:** Voeg printf's toe om te begrijpen wat er gebeurt
+- **Segment fix:** Initialiseer RSP segment registers voor display lists
 
 ### Stap 6: Documenteer
-Maak een nieuwe `SESSION_N_*.md` in `chris docs/hypotheses/` met:
+
+Maak een nieuwe `SESSION_N_[BESCHRIJVING].md` in `chris docs/hypotheses/` met:
 - Wat je onderzocht hebt
 - Wat je gevonden hebt
 - Wat je gefixt hebt
 - Wat de volgende stappen zijn
 
 ### Stap 7: Commit
+
 ```bash
 git add <gewijzigde bestanden>
 git commit -m "Session N: <korte beschrijving>"
 ```
 
-## Huidige Game Status
+## N64 Technische Concepten
 
-### Wat Werkt
-- Main code (765 functies)
-- Codeseg overlay (245 functies) - 0x801E
-- segment_1B1FB0 overlay (14 functies) - 0x802C voor state 5,6
-- State transitions (met auto-advance bypass)
-- DMA asset loading
+### RSP Segment Addressing
 
-### Wat Nog Niet Werkt
-- **RT64 display list crash** - Segment 6 niet geïnitialiseerd
-- **Controller input** - D_801CE65A altijd 0
-- **17 andere overlays** - Nog niet geïmplementeerd
+N64 display lists gebruiken gesegmenteerde adressen (bijv. `0x06001234`):
+- Byte 0: Segment nummer (0-15)
+- Bytes 1-3: Offset binnen segment
 
-## Belangrijke Adressen
+RT64 moet weten waar elk segment naar wijst via `gSPSegment(seg, address)`.
 
-```cpp
-#define ADDR_GAME_STATE      0x000DAB24  // D_800DAB24 - main game state
-#define ADDR_BOOT_FLAG       0x001CE63C  // D_801CE63C - boot sequence control
-#define ADDR_DL_PTR          0x00151944  // D_80151944 - display list pointer
-#define ADDR_CONTROLLER      0x001CE65A  // D_801CE65A - controller input
-```
+**Veelvoorkomend probleem:** Display list crasht omdat segment niet geinitialiseerd is.
 
-## State Machine
+### N64 Overlay Systeem
 
-```
-State 5 (Boot) ’ State 6 (Logo) ’ State 2 (???) ’ ...
-     “                “
-segment_1B1FB0   segment_1B1FB0      ovl_i0
-```
+Games laden vaak verschillende overlays naar hetzelfde VRAM adres:
+- Elke game state kan een andere overlay gebruiken
+- Overlay table definieert welke overlay bij welke state hoort
+- Overlays bevatten functies die alleen in bepaalde states actief zijn
 
-## N64 Overlay Systeem
+### Display List (DL) Commands
 
-De game laadt verschillende overlays naar 0x802C5800 afhankelijk van de state:
-- State 5,6: gOverlayTable[0] = segment_1B1FB0
-- State 2: gOverlayTable[1] = ovl_i0
-- State 7,0x28: gOverlayTable[18] = ovl_i1
-- etc.
+Belangrijke GBI commands:
+- `0x06` - G_DL: Branch naar andere display list
+- `0xDC` - G_MOVEWORD: Set segment, matrix, etc.
+- `0xE7` - G_RDPPIPESYNC
+- `0xB8` - G_ENDDL: End display list
 
-Zie `code_52990.c` voor de volledige mapping.
+## Debug Tips
 
-## Tips
-
-1. **Gebruik de decomp** - De assembly en C code in de decomp is je beste vriend
+1. **Gebruik de decomp** - Assembly en C code in decomp is je beste vriend
 2. **Debug output** - Printf's in `waverace_stubs.cpp` zijn essentieel
-3. **Kleine stappen** - Fix één ding per keer
+3. **Kleine stappen** - Fix een ding per keer
 4. **Test vaak** - Build en test na elke wijziging
 5. **Documenteer alles** - Toekomstige sessies hebben je notes nodig
+6. **Check DMA logs** - Welke data wordt geladen en waar?
+7. **Segment adressen** - Controleer of RSP segments correct zijn gezet
+
+### Voor AI Assistants
+
+**BELANGRIJK:** Als AI heb je geen visuele output van de game. Je bent volledig afhankelijk van console output om te begrijpen wat er gebeurt. Daarom:
+
+- **Voeg ALTIJD uitgebreide printf debug output toe** - Print de huidige state, variabele waarden, functie entry/exit, etc.
+- **Print bij elke belangrijke stap** - Bijv. "Entering function X", "State changed from A to B", "DL pointer = 0x..."
+- **Print data in hex formaat** - Adressen, flags, en raw data zijn makkelijker te analyseren in hex
+- **Print voor EN na operaties** - Zo zie je wat er veranderd is
+- **Gebruik duidelijke markers** - Bijv. `>>> ENTERING`, `<<< RETURNED`, `!!! ERROR`, `*** SUCCESS`
+- **Print context** - Niet alleen "value = 5" maar "Game state (D_800DAB24) = 5 (expected: 5 or 6)"
+
+De debug output is je ogen in de game. Hoe meer detail, hoe beter je kunt debuggen.
 
 ## Voorbeeld Debug Flow
 
 ```
-1. Game crasht ’ Check error output
-2. Crash in RT64 processDisplayLists ’ DL probleem
-3. DL gebruikt segment 6 address ’ Segment niet geïnitialiseerd
-4. Zoek in decomp waar segment 6 wordt gezet ’ gSPSegment(6, ...)
-5. Voeg segment setup toe ’ Fix!
+1. Game crasht
+   â†“
+2. Check error output â†’ Waar crasht het?
+   â†“
+3. Analyseer de crash â†’ Welke functie/data?
+   â†“
+4. Zoek in decomp â†’ Wat verwacht de originele code?
+   â†“
+5. Implementeer fix â†’ Stub, segment setup, etc.
+   â†“
+6. Test â†’ Volgende probleem
 ```
+
+## Veelvoorkomende Problemen
+
+| Probleem | Symptoom | Oplossing |
+|----------|----------|-----------|
+| Segment niet gezet | DL crash, invalid address | Inject gSPSegment command |
+| Overlay niet geladen | Function not found | Voeg [[section]] toe aan syms.toml |
+| State blijft hangen | Game reageert niet | Debug state transition logic, evt. bypass |
+| Controller werkt niet | Input = 0 | Check controller stubs, SDL mapping |
+| Assets niet geladen | Black screen, crash | Check DMA loading, segment setup |
 
 ## Begin Nu
 
-1. Lees de documentatie
-2. Build de game
-3. Run en analyseer de output
-4. Identificeer het huidige probleem
-5. Zoek de root cause
-6. Implementeer een fix
-7. Test
-8. Documenteer
-9. Commit
+1. Lees de recente sessie documentatie (SESSION_*.md)
+2. Begrijp de huidige status en bekende problemen
+3. Build de game
+4. Run en analyseer de output
+5. Identificeer het huidige probleem
+6. Zoek de root cause
+7. Implementeer een fix
+8. Test
+9. Documenteer in een nieuwe SESSION_N_*.md
+10. Commit
 
 Veel succes! Denk systematisch en documenteer je bevindingen voor de volgende sessie.
