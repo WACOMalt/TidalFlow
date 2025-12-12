@@ -47,6 +47,8 @@ static int state_change_count = 0;
 #define ADDR_BOOT_FLAG       0x001CE63C  // D_801CE63C - boot sequence control
 #define ADDR_DL_PTR          0x00151944  // D_80151944 - display list pointer
 #define ADDR_FRAME_COUNT     0x000D4620  // Frame counter (approximate)
+#define ADDR_CONTROLLER      0x001CE65A  // D_801CE65A - controller input (buttons)
+#define ADDR_FADE_COUNTER    0x002C76F4  // D_802C76F4 - fade counter in overlay BSS
 
 // ============================================================================
 // Helper functions
@@ -283,9 +285,20 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
     if (game_state == 5 || game_state == 6) {
         ovl_802C5BA4_calls++;
 
-        if (call_count <= 30) {
+        // Read controller input and fade counter for debug
+        uint16_t controller_input = *(uint16_t*)(rdram + ADDR_CONTROLLER);
+        uint32_t fade_counter = 0;
+        // Fade counter is in overlay BSS at 0x802C76F4 - only valid when overlay is loaded
+        // Physical address = 0x002C76F4
+        if (game_state == 5 || game_state == 6) {
+            fade_counter = *(uint32_t*)(rdram + 0x002C76F4);
+        }
+
+        if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
             printf(">>> [STATE %d] CALLING ovl_func_802C5BA4 (0x802C segment_1B1FB0)...\n", game_state);
             printf("    This overlay handles: boot sequence, framebuffer clear, logo\n");
+            printf("    Controller (D_801CE65A): 0x%04X  (need 0xB000 for skip)\n", controller_input);
+            printf("    Fade counter (0x802C76F4): %d  (need 14 for auto-transition)\n", fade_counter);
             fflush(stdout);
         }
 
@@ -294,10 +307,16 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
         uint32_t dl_ptr_out = (uint32_t)ctx->r2;
         uint32_t dl_size = dl_ptr_out - dl_ptr_in;
 
-        if (call_count <= 30) {
+        // Read fade counter AFTER overlay runs to see if it changed
+        uint32_t fade_counter_after = *(uint32_t*)(rdram + 0x002C76F4);
+
+        if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
             printf("<<< [STATE %d] RETURNED from ovl_func_802C5BA4\n", game_state);
             printf("    DL output: 0x%08X (wrote %d bytes = %d commands)\n",
                    dl_ptr_out, dl_size, dl_size / 8);
+            if (fade_counter_after != fade_counter) {
+                printf("    Fade counter changed: %d -> %d\n", fade_counter, fade_counter_after);
+            }
             fflush(stdout);
         }
 
@@ -306,6 +325,45 @@ extern "C" void func_80092CF0_impl(uint8_t* rdram, recomp_context* ctx) {
         if (new_boot_flag != boot_flag) {
             printf("!!! BOOT FLAG CHANGED: %d -> %d\n", boot_flag, new_boot_flag);
             fflush(stdout);
+        }
+
+        // AUTO-ADVANCE: IMMEDIATELY after first state 5 frame, force state 6
+        // This bypasses the controller input check since controller is not working
+        // NOTE: The game crashes during display list processing, so we need to be quick
+        static bool state5_advanced = false;
+        if (game_state == 5 && !state5_advanced) {
+            state5_advanced = true;
+            printf("\n");
+            printf("╔══════════════════════════════════════════════════════════════╗\n");
+            printf("║  AUTO-ADVANCE: Immediately forcing state 5 -> 6!             ║\n");
+            printf("║  (Controller input bypass - normally needs Start+A+B)        ║\n");
+            printf("╚══════════════════════════════════════════════════════════════╝\n");
+            printf("\n");
+            fflush(stdout);
+
+            // Set D_800DAB24 = 6 (next state)
+            write_u32(rdram, ADDR_GAME_STATE, 6);
+            // Also set D_801CE63C = 1 (boot flag) to trigger framebuffer clear
+            write_u32(rdram, ADDR_BOOT_FLAG, 1);
+        }
+
+        // AUTO-ADVANCE state 6 -> 2 (to ovl_i0) after 3 frames in state 6
+        static int state6_frames = 0;
+        if (game_state == 6) {
+            state6_frames++;
+            if (state6_frames == 3) {
+                printf("\n");
+                printf("╔══════════════════════════════════════════════════════════════╗\n");
+                printf("║  AUTO-ADVANCE: Forcing state 6 -> 2 (ovl_i0)!                ║\n");
+                printf("║  (Bypass fade counter check)                                 ║\n");
+                printf("╚══════════════════════════════════════════════════════════════╝\n");
+                printf("\n");
+                fflush(stdout);
+
+                // Set D_800DAB24 = 2 (this is what func_801EB180 does)
+                write_u32(rdram, ADDR_GAME_STATE, 2);
+                write_u32(rdram, ADDR_BOOT_FLAG, 1);
+            }
         }
 
         return;
