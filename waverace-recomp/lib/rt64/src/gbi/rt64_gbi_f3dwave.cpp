@@ -29,8 +29,41 @@ namespace RT64 {
             state->rsp->setVertex(addr, vtxCount, dstIndex);
         }
 
+        // Track successful tri1 calls for debugging
+        static int g_tri1_success_count = 0;
+        static int g_tri1_error_count = 0;
+
         void tri1(State *state, DisplayList **dl) {
-            // Get raw indices BEFORE division
+            // Wave Race uses TWO different G_TRI1 formats!
+            // 1. F3D-style: indices in w1, raw values /5 for vertex index
+            // 2. F3DEX2-style: indices in w0, 7-bit values at positions 17/9/1
+            //
+            // Detect which format by checking if w1 looks like command data (high byte is opcode)
+            uint8_t w1_high = ((*dl)->w1 >> 24) & 0xFF;
+
+            // If w1's high byte is a GBI opcode (0xB0-0xFF range), use F3DEX2 format
+            if (w1_high >= 0xB0) {
+                // F3DEX2-style: indices encoded in w0
+                uint8_t v0 = (*dl)->p0(17, 7);
+                uint8_t v1 = (*dl)->p0(9, 7);
+                uint8_t v2 = (*dl)->p0(1, 7);
+
+                // Basic sanity check
+                if (v0 >= 32 || v1 >= 32 || v2 >= 32) {
+                    g_tri1_error_count++;
+                    if (g_tri1_error_count <= 5) {
+                        fprintf(stderr, "[F3DWAVE] tri1 F3DEX2-style: Invalid indices %d,%d,%d (w0=0x%08X w1=0x%08X) - skipping\n",
+                                v0, v1, v2, (*dl)->w0, (*dl)->w1);
+                    }
+                    return;
+                }
+
+                g_tri1_success_count++;
+                state->rsp->drawIndexedTri(v0, v1, v2);
+                return;
+            }
+
+            // F3D-style: indices in w1, divided by 5
             uint8_t raw_v0 = (*dl)->p1(16, 8);
             uint8_t raw_v1 = (*dl)->p1(8, 8);
             uint8_t raw_v2 = (*dl)->p1(0, 8);
@@ -42,16 +75,16 @@ namespace RT64 {
             if (raw_v0 >= 0xA0 || raw_v1 >= 0xA0 || raw_v2 >= 0xA0) {
                 // Invalid vertex indices - likely parsing garbage data
                 // Terminate the DL silently (don't spam logs)
-                static int err_count = 0;
-                if (err_count < 5) {
-                    fprintf(stderr, "[F3DWAVE] tri1: Invalid raw indices 0x%02X,0x%02X,0x%02X (w1=0x%08X) - terminating DL\n",
-                            raw_v0, raw_v1, raw_v2, (*dl)->w1);
-                    err_count++;
+                g_tri1_error_count++;
+                if (g_tri1_error_count <= 5) {
+                    fprintf(stderr, "[F3DWAVE] tri1 F3D-style: Invalid raw indices 0x%02X,0x%02X,0x%02X (w0=0x%08X w1=0x%08X) after %d good tris - terminating DL\n",
+                            raw_v0, raw_v1, raw_v2, (*dl)->w0, (*dl)->w1, g_tri1_success_count);
                 }
                 *dl = nullptr;
                 return;
             }
 
+            g_tri1_success_count++;
             uint8_t v0 = raw_v0 / 5;
             uint8_t v1 = raw_v1 / 5;
             uint8_t v2 = raw_v2 / 5;
