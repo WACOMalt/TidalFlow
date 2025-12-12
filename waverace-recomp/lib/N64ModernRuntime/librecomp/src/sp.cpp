@@ -50,151 +50,73 @@ static void fix_display_list(uint8_t* rdram, uint32_t data_ptr) {
     uint32_t phys_addr = data_ptr & 0x7FFFFF;
     uint32_t* dl = (uint32_t*)(rdram + phys_addr);
 
-    // ==============================================================
-    // SEGMENT FIX: Inject gSPSegment(8, base) at the start of the DL
-    // ==============================================================
-    // Wave Race's DL uses segment 8 addresses like 0x08066180 for assets.
-    // Assets are loaded via DMA to 0x80200000 area.
-    // The overlay expects segment 8 to be set, but it's not!
-    //
-    // From DMA logs: assets loaded to 0x802310A0 (large asset block 0x678E0 bytes)
-    // Offset 0x66180 would be at 0x802310A0 - 0x66180 = ???
-    // Let's try: segment 8 base = 0x801CA920 (so 0x801CA920 + 0x66180 = 0x802310A0)
-    //
-    // Actually, looking at typical N64 games, segment 8 often points to 0x80200000 area.
-    // The offset 0x66180 suggests base at 0x802310A0 - 0x66180 + adjustment...
-    // Let's try pointing segment 8 directly at 0x801CA920 which is 0x802310A0 - 0x66180
-    //
-    // UPDATE: After analysis, segment 8 should point to where the large asset block starts
-    // minus the offsets used. The game DMA'd 0x678E0 bytes to 0x802310A0.
-    // The DL uses offsets like 0x66180, 0x4A460, 0x4B460.
-    // So segment 8 base should be: 0x802310A0 - 0x66180 = 0x801CAF20
-    // But that doesn't work either... Let's try 0x801CA920 (base of asset area)
-    //
-    // ==============================================================
-    // SEGMENT FIX: Set up segment 8 and potentially call overlay DL
-    // ==============================================================
-    // Wave Race's DL uses segment 8 addresses like 0x08066180 for assets.
-    // The overlay generates a SUB display list that the master DL should call.
-    //
-    // TIMING ISSUE: The first task is submitted BEFORE the overlay runs!
-    // So on frame 1, the overlay DL is empty. We need to:
-    // - Frame 1: Just set segment 8 + ENDDL (no G_DL call)
-    // - Frame 2+: Set segment 8 + G_DL call to overlay + ENDDL
-
     static int fix_count = 0;
     fix_count++;
 
-    // Calculate segment 8 base address
-    // From DMA: loaded 0x678E0 bytes from ROM 0x0FE320 to RDRAM 0x802310A0
+    // ==============================================================
+    // SEGMENT 8 FIX: Update segment 8 value IN-PLACE
+    // ==============================================================
+    // The original DL already has segment setup commands, including segment 8.
+    // But the segment 8 value is wrong - it's set by the game to point to
+    // a different location than where the assets are actually loaded.
+    //
+    // From DMA logs: assets loaded to 0x802310A0 (large asset block 0x678E0 bytes)
     // DL uses 0x08066180 -> offset 0x66180 into segment 8
-    // segment 8 base = 0x802310A0 - 0x66180 = 0x801CAF20
+    // Correct segment 8 base = 0x802310A0 - 0x66180 = 0x801CAF20
+    //
+    // The original DL sets segment 8 to 0x80316800 (wrong!)
+    // We need to find and fix the segment 8 command without destroying other segments.
+    //
+    // DL structure (8 bytes per command):
+    // +0x00: gSPSegment(0, ...)
+    // +0x08: gSPSegment(1, ...)
+    // +0x10: gSPSegment(2, ...)  <- needed for vertex data!
+    // +0x18: gSPSegment(3, ...)
+    // +0x20: gSPSegment(7, ...)
+    // +0x28: gSPSegment(8, ...)  <- we need to fix this value
+    // +0x30: gSPSegment(13, ...)
+    // +0x38: gSPSegment(14, ...)
+    // +0x40: G_DL or other commands
+
     uint32_t segment_8_base = 0x801CAF20;
 
-    // Read where the overlay wrote its DL
-    // D_80151944 is the current DL write pointer
-    // After overlay runs, it points to END of overlay DL
-    // Before overlay runs (frame 1), it points to start of buffer
-    // NOTE: rdram is in native byte order (little-endian on x86), NOT N64 big-endian
-    uint32_t dl_ptr_addr = 0x00151944;
-    uint32_t current_dl_ptr = *(uint32_t*)(rdram + dl_ptr_addr);  // Already in native order
+    // Scan the first ~10 commands looking for the segment 8 setup
+    // G_MOVEWORD format: w0 = 0xBC00XXYY where XX*4 = segment number
+    // For segment 8: offset = 8*4 = 0x20, so w0 = 0xBC002006
+    bool found_seg8 = false;
+    for (int i = 0; i < 10; i++) {
+        uint32_t w0 = dl[i*2];
+        uint32_t w1 = dl[i*2 + 1];
 
-    // The overlay DL starts at 0x8011F940 (known from debug)
-    // If current_dl_ptr > 0x8011F940, the overlay has written something
-    uint32_t overlay_dl_start = 0x8011F940;
-    bool overlay_has_content = (current_dl_ptr > overlay_dl_start) &&
-                               (current_dl_ptr < overlay_dl_start + 0x10000);  // Sanity check
-
-    fprintf(stderr, "[DL-FIX] Frame %d: D_80151944=0x%08X, overlay_start=0x%08X, has_content=%d\n",
-            fix_count, current_dl_ptr, overlay_dl_start, overlay_has_content);
-
-    // Always write segment 8 setup
-    // F3D G_MOVEWORD format: BC tt oo oo | AAAAAAAA
-    // - BC = opcode
-    // - tt = type (06 = G_MW_SEGMENT)
-    // - oooo = offset for segment = segment_number * 4 = 8 * 4 = 0x20
-    //
-    // But wait - RT64 extracts segment number as p0(10, 4) = (w0 >> 10) & 0xF
-    // So segment 8 needs to be at bits 10-13: 8 << 10 = 0x2000
-    //
-    // Actually, looking at the N64 SDK gbi.h:
-    // #define gsSPSegment(seg, base) gsMoveWd(G_MW_SEGMENT, (seg)*4, base)
-    // So segment offset = seg * 4, and it goes in the "offset" field (bits 8-15 for F3D)
-    //
-    // For F3D: gMoveWd is BC tt oo oo where offset is 16-bit (high 8 bits in byte 2, low 8 bits in byte 3)
-    // So for segment 8: offset = 8 * 4 = 32 = 0x0020
-    // w0 = 0xBC 06 00 20 = 0xBC060020
-    //
-    // But RT64's extraction is (w0 >> 10) & 0xF for segment number
-    // 0xBC060020 >> 10 = 0x002F0180
-    // 0x002F0180 & 0xF = 0
-    // That's segment 0, not 8!
-    //
-    // The issue is RT64's F3D handler uses p0(10, 4) but the offset is at bits 0-15
-    // Let me check what the correct format is...
-    //
-    // Actually looking at F3D more carefully:
-    // G_MOVEWORD: BC ii ss oo
-    // - ii = index (type)
-    // - ss = segment number (when type = G_MW_SEGMENT)
-    // - oo = offset within segment table
-    //
-    // No wait, that's still wrong. Let me look at the actual N64 SDK format.
-    // In gbi.h: #define gMoveWd(pkt, index, offset, data)
-    // Word 0: (G_MOVEWORD << 24) | ((offset) << 8) | (index)
-    //
-    // So for gSPSegment(8, base):
-    // - index = G_MW_SEGMENT = 0x06
-    // - offset = seg * 4 = 32 = 0x20
-    // w0 = (0xBC << 24) | (0x20 << 8) | 0x06 = 0xBC002006
-    //
-    // Let me recalculate RT64's extraction:
-    // segment = p0(10, 4) = (w0 >> 10) & 0xF
-    // 0xBC002006 >> 10 = 0x002F0008
-    // 0x002F0008 & 0xF = 8  <- Correct!
-    // RT64 reads display lists as native uint32_t (little-endian on x86).
-    // We need to write the commands in native byte order!
-    //
-    // For gSPSegment(8, base):
-    // w0 = 0xBC002006 (opcode=0xBC, offset=0x20, index=0x06)
-    // w1 = segment_8_base
-    //
-    // For G_ENDDL:
-    // w0 = 0xB8000000
-
-    // Write gSPSegment(8, segment_8_base)
-    dl[0] = 0xBC002006;  // w0: G_MOVEWORD for segment 8
-    dl[1] = segment_8_base;  // w1: segment base address
-
-    if (overlay_has_content) {
-        // Overlay has content - add G_DL call to it
-        fprintf(stderr, "[DL-FIX] Adding G_DL call to overlay DL at 0x%08X\n", overlay_dl_start);
-
-        // G_DL command (branch to overlay display list)
-        dl[2] = 0x06000000;  // w0: G_DL opcode
-        dl[3] = overlay_dl_start;  // w1: address of overlay DL
-
-        // G_ENDDL after G_DL
-        dl[4] = 0xB8000000;  // w0: G_ENDDL
-        dl[5] = 0x00000000;  // w1
-    } else {
-        // No overlay content yet - just segment setup + ENDDL
-        fprintf(stderr, "[DL-FIX] No overlay content yet - just segment setup\n");
-
-        dl[2] = 0xB8000000;  // w0: G_ENDDL
-        dl[3] = 0x00000000;  // w1
+        // Check if this is G_MOVEWORD for segment 8
+        // w0 = 0xBC002006 means opcode=0xBC, offset=0x20 (segment 8), index=0x06 (G_MW_SEGMENT)
+        if (w0 == 0xBC002006) {
+            fprintf(stderr, "[DL-FIX] Frame %d: Found segment 8 at cmd %d, old value=0x%08X, new=0x%08X\n",
+                    fix_count, i, w1, segment_8_base);
+            dl[i*2 + 1] = segment_8_base;
+            found_seg8 = true;
+            break;
+        }
     }
 
-    // Debug: dump the first few commands we wrote
-    fprintf(stderr, "[DL-FIX] DL at 0x%08X after fix:\n", data_ptr);
-    fflush(stderr);
-    for (int i = 0; i < 4; i++) {
-        fprintf(stderr, "  [%d] %08X %08X (opcode=0x%02X)\n", i, dl[i*2], dl[i*2+1], (dl[i*2] >> 24) & 0xFF);
+    if (!found_seg8) {
+        fprintf(stderr, "[DL-FIX] Frame %d: WARNING - segment 8 command not found in first 10 commands!\n", fix_count);
+        // Dump first 10 commands for debugging
+        for (int i = 0; i < 10; i++) {
+            fprintf(stderr, "  [%d] w0=%08X w1=%08X\n", i, dl[i*2], dl[i*2+1]);
+        }
+    }
+
+    // Debug: dump the segment commands after fix
+    if (fix_count <= 3) {
+        fprintf(stderr, "[DL-FIX] DL at 0x%08X after fix (frame %d):\n", data_ptr, fix_count);
+        for (int i = 0; i < 8; i++) {
+            uint32_t w0 = dl[i*2];
+            uint32_t opcode = (w0 >> 24) & 0xFF;
+            fprintf(stderr, "  [%d] %08X %08X (opcode=0x%02X)\n", i, w0, dl[i*2+1], opcode);
+        }
         fflush(stderr);
     }
-
-    // Return early - we've set up the DL
-    return;
 }
 
 // Exported function to be called from events.cpp right before send_dl

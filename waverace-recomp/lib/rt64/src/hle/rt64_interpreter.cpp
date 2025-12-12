@@ -156,9 +156,6 @@ namespace RT64 {
     void Interpreter::processDisplayLists(uint32_t dlStartAdddress, DisplayList *dlStart) {
         assert(hleGBI != nullptr);
 
-        fprintf(stderr, "[RT64-DL] processDisplayLists START at 0x%08X, hleGBI->ucode=%d\n", dlStartAdddress, (int)hleGBI->ucode);
-        fflush(stderr);
-
         state->dlCpuProfiler.start();
 
         // Update the state with the current display list address.
@@ -173,11 +170,9 @@ namespace RT64 {
         uint8_t opCode;
         GBIFunction func;
         int cmd_count = 0;
-        while (dl != nullptr) {
+        int max_commands = 50000; // Safety limit to prevent infinite loops
+        while (dl != nullptr && cmd_count < max_commands) {
             opCode = (dl->w0 >> 24);
-
-            fprintf(stderr, "[RT64-DL] cmd #%d: w0=%08X w1=%08X opCode=0x%02X\n", cmd_count, dl->w0, dl->w1, opCode);
-            fflush(stderr);
             cmd_count++;
 
             if ((extendedOpCode != 0) && (opCode == extendedOpCode)) {
@@ -191,11 +186,7 @@ namespace RT64 {
 #       endif
 
                 if (func != nullptr) {
-                    fprintf(stderr, "[RT64-DL]   calling func for opCode 0x%02X...\n", opCode);
-                    fflush(stderr);
                     func(state, &dl);
-                    fprintf(stderr, "[RT64-DL]   func returned, dl=%p\n", (void*)dl);
-                    fflush(stderr);
                 }
                 else {
                     RT64_LOG_PRINTF("DL Parser ran into an unknown opCode (GBI %u): %u / 0x%X", uint32_t(hleGBI->ucode), opCode, opCode);
@@ -207,8 +198,10 @@ namespace RT64 {
             }
         }
 
-        fprintf(stderr, "[RT64-DL] processDisplayLists DONE, processed %d commands\n", cmd_count);
-        fflush(stderr);
+        if (cmd_count >= max_commands) {
+            fprintf(stderr, "[RT64-DL] WARNING: Hit max command limit (%d) - possible infinite DL\n", max_commands);
+            fflush(stderr);
+        }
 
         state->dlCpuProfiler.end();
     }
