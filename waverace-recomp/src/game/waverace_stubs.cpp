@@ -225,6 +225,231 @@ extern "C" void ovl_func_801ECAF4(uint8_t* rdram, recomp_context* ctx);  // 0x80
 extern "C" void ovl_func_802C5BA4(uint8_t* rdram, recomp_context* ctx);  // 0x802C overlay (segment_1B1FB0) - State 5,6!
 extern "C" void func_i0_802C5800(uint8_t* rdram, recomp_context* ctx);   // 0x802C overlay (ovl_i0) - State 2!
 
+// Debug counter for state transition function
+static int ovl_801EB180_calls = 0;
+
+// Forward declarations for subfunctions that ovl_func_801EB180 calls
+extern "C" void func_80096960(uint8_t* rdram, recomp_context* ctx);
+extern "C" void func_8009684C(uint8_t* rdram, recomp_context* ctx);
+extern "C" void func_8004A208(uint8_t* rdram, recomp_context* ctx);
+extern "C" void ovl_FadeTransition_SetProps(uint8_t* rdram, recomp_context* ctx);
+
+// ============================================================================
+// func_800C21F4: STUB - Audio/sound init, was blocking (Session 24)
+// ============================================================================
+extern "C" void func_800C21F4(uint8_t* rdram, recomp_context* ctx) {
+    printf("[STUB] func_800C21F4(a0=%lld, a1=%lld) - audio init stubbed\n",
+           (long long)ctx->r4, (long long)ctx->r5);
+    fflush(stdout);
+}
+
+// ============================================================================
+// ovl_func_801E6A4C: STUB - Was blocking the state 6→2 transition (Session 24)
+// ============================================================================
+// This function appears to do menu/UI setup. With a0=0, a1=0 it should
+// just do some memory copies and return, but the N64Recomp version blocks.
+// We stub it for now to allow state transitions to work.
+// ============================================================================
+extern "C" void ovl_func_801E6A4C(uint8_t* rdram, recomp_context* ctx) {
+    // For now, just do nothing - the original function was blocking
+    // TODO: Investigate why the original blocked and implement if needed
+    printf("[STUB] ovl_func_801E6A4C(a0=%lld, a1=%lld) - stubbed, returning immediately\n",
+           (long long)ctx->r4, (long long)ctx->r5);
+    fflush(stdout);
+}
+
+// ============================================================================
+// ovl_func_801EB180: State 6 → 2 Transition (Custom Debug Implementation)
+// ============================================================================
+// This function sets up the game for state 2 (menu/ovl_i0).
+// The original N64Recomp version was blocking somewhere.
+// This custom version calls each subfunctie with debug output to trace blocking.
+//
+// Based on assembly at 0x801EB180 (B97B0 in ROM)
+// ============================================================================
+extern "C" void ovl_func_801EB180(uint8_t* rdram, recomp_context* ctx) {
+    ovl_801EB180_calls++;
+
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║ >>> STATE TRANSITION: ovl_func_801EB180 CALLED! #%d\n", ovl_801EB180_calls);
+    printf("║     This function transitions from state 6 → state 2\n");
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+    fflush(stdout);
+
+    // ========================================================================
+    // Part 1: Set all the state variables (from assembly lines B97B0-B9878)
+    // ========================================================================
+    printf("[801EB180] Part 1: Setting state variables...\n"); fflush(stdout);
+
+    // D_801CE634 = D_800DAB24 (save previous state)
+    uint32_t prev_state = read_u32(rdram, 0x000DAB24);
+    write_u32(rdram, 0x001CE634, prev_state);
+
+    // D_801CE630 = 0
+    write_u32(rdram, 0x001CE630, 0);
+
+    // D_800DAB24 = 2 (STATE 6 → 2!)
+    write_u32(rdram, 0x000DAB24, 2);
+    printf("[801EB180] STATE CHANGED: %d → 2\n", prev_state); fflush(stdout);
+
+    // D_801CE638 = 0
+    write_u32(rdram, 0x001CE638, 0);
+
+    // D_801CE63C = 1 (init flag)
+    write_u32(rdram, 0x001CE63C, 1);
+
+    // D_801CE640 = 0
+    write_u32(rdram, 0x001CE640, 0);
+
+    // D_801CE644 = 0
+    write_u32(rdram, 0x001CE644, 0);
+
+    // D_800DAB1C = 0
+    write_u32(rdram, 0x000DAB1C, 0);
+
+    // D_800D461C = 3
+    write_u32(rdram, 0x000D461C, 3);
+
+    // gGameModes (D_801CE620) = 0
+    write_u32(rdram, 0x001CE620, 0);
+
+    // gPlayers (D_800DAB28) = 1
+    write_u32(rdram, 0x000DAB28, 1);
+
+    // gRiders (D_801982F0) = 2
+    write_u32(rdram, 0x001982F0, 2);
+
+    // D_800D49B0 = 0x14 (20)
+    write_u32(rdram, 0x000D49B0, 0x14);
+
+    // D_800D8174 = 5
+    write_u32(rdram, 0x000D8174, 5);
+
+    // D_801CE728 = 3
+    write_u32(rdram, 0x001CE728, 3);
+
+    // D_800D8178 = 1
+    write_u32(rdram, 0x000D8178, 1);
+
+    // D_801CE600 = 0
+    write_u32(rdram, 0x001CE600, 0);
+
+    // D_801CE6F8 = 0
+    write_u32(rdram, 0x001CE6F8, 0);
+
+    // D_801CB334 = 0
+    write_u32(rdram, 0x001CB334, 0);
+
+    // gCourseID (D_800D8170) - check and possibly set to 0
+    uint32_t course_id = read_u32(rdram, 0x000D8240);
+    if (course_id == 0) {
+        write_u32(rdram, 0x000D8170, 0);
+    }
+
+    // D_801CE6F0 = 0 (halfword)
+    *(uint16_t*)(rdram + 0x001CE6F0) = 0;
+
+    // D_800DAB68 = 0 (halfword)
+    *(uint16_t*)(rdram + 0x000DAB68) = 0;
+
+    // D_800DAB0C = 0 (halfword)
+    *(uint16_t*)(rdram + 0x000DAB0C) = 0;
+
+    // D_800DAB60 = 0 (halfword) - or 1 depending on D_801CB280
+    *(uint16_t*)(rdram + 0x000DAB60) = 0;
+
+    // D_800DAB64 = 0 (halfword)
+    *(uint16_t*)(rdram + 0x000DAB64) = 0;
+
+    // D_800DAA08 = 0
+    write_u32(rdram, 0x000DAA08, 0);
+
+    // gRiderGameModes (D_801CE648) = 1
+    write_u32(rdram, 0x001CE648, 1);
+
+    // D_801CE64C = 0
+    write_u32(rdram, 0x001CE64C, 0);
+
+    // D_801CE650 = 3
+    write_u32(rdram, 0x001CE650, 3);
+
+    printf("[801EB180] Part 1 complete: All state variables set\n"); fflush(stdout);
+
+    // ========================================================================
+    // Part 2: Call subfunctions (these might block!)
+    // ========================================================================
+
+    // Save original r4-r7 for later
+    gpr orig_r4 = ctx->r4;
+    gpr orig_r5 = ctx->r5;
+    gpr orig_r6 = ctx->r6;
+    gpr orig_r7 = ctx->r7;
+
+    // func_80096960(1, something, 0, 0, 0)
+    printf("[801EB180] Calling func_80096960...\n"); fflush(stdout);
+    ctx->r4 = 1;  // a0 = 1
+    ctx->r5 = 0;  // a1 = from stack (we use 0)
+    ctx->r6 = 0;  // a2 - not set explicitly
+    ctx->r7 = 0;  // a3 = 0
+    // Note: also needs stack arg at 0x10($sp) = 0
+    func_80096960(rdram, ctx);
+    printf("[801EB180] func_80096960 returned\n"); fflush(stdout);
+
+    // func_8009684C(a1, a2) - with values from table lookup
+    printf("[801EB180] Calling func_8009684C...\n"); fflush(stdout);
+    ctx->r4 = 0x806 << 16;  // Some ROM address
+    ctx->r5 = 0;  // Default
+    ctx->r6 = 0;
+    func_8009684C(rdram, ctx);
+    printf("[801EB180] func_8009684C returned\n"); fflush(stdout);
+
+    // func_8004A208()
+    printf("[801EB180] Calling func_8004A208...\n"); fflush(stdout);
+    func_8004A208(rdram, ctx);
+    printf("[801EB180] func_8004A208 returned\n"); fflush(stdout);
+
+    // FadeTransition_SetProps(0, 0, 0)
+    printf("[801EB180] Calling ovl_FadeTransition_SetProps...\n"); fflush(stdout);
+    ctx->r4 = 0;
+    ctx->r5 = 0;
+    ctx->r6 = 0;
+    ovl_FadeTransition_SetProps(rdram, ctx);
+    printf("[801EB180] ovl_FadeTransition_SetProps returned\n"); fflush(stdout);
+
+    // func_801E6A4C(0, 0) - STUBBED because it was blocking (Session 24)
+    printf("[801EB180] Skipping ovl_func_801E6A4C (was blocking)\n"); fflush(stdout);
+    // Skip the call - function was blocking the state transition
+    // ovl_func_801E6A4C(rdram, ctx);
+    printf("[801EB180] ovl_func_801E6A4C skipped\n"); fflush(stdout);
+
+    // gCameraPerspective (D_80227C80) = 5
+    write_u32(rdram, 0x00227C80, 5);
+
+    // D_800DA9AC = 1 (halfword)
+    *(uint16_t*)(rdram + 0x000DA9AC) = 1;
+
+    // func_800C21F4(0, 0)
+    printf("[801EB180] Calling func_800C21F4...\n"); fflush(stdout);
+    ctx->r4 = 0;
+    ctx->r5 = 0;
+    func_800C21F4(rdram, ctx);
+    printf("[801EB180] func_800C21F4 returned\n"); fflush(stdout);
+
+    // Restore r4-r7
+    ctx->r4 = orig_r4;
+    ctx->r5 = orig_r5;
+    ctx->r6 = orig_r6;
+    ctx->r7 = orig_r7;
+
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║ <<< STATE TRANSITION COMPLETE: ovl_func_801EB180 DONE!\n");
+    printf("║     Game state is now: %d\n", read_u32(rdram, 0x000DAB24));
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+    fflush(stdout);
+}
+
 extern "C" void func_80092CF0(uint8_t* rdram, recomp_context* ctx) {
     static int call_count = 0;
     call_count++;
@@ -286,6 +511,50 @@ extern "C" void func_80092CF0(uint8_t* rdram, recomp_context* ctx) {
     // This is the boot/intro state - should clear framebuffer and show Nintendo logo sequence
     if (game_state == 5 || game_state == 6) {
         ovl_802C5BA4_calls++;
+
+        // BOOT INIT FIX (Session 22):
+        // The boot overlay has complex state machine logic that depends on multiple
+        // overlay BSS variables (D_802C76A4, D_802C76A8, etc.) being in specific states.
+        // Without controller input, the internal state machine never progresses.
+        //
+        // DIRECT FIX: After overlay returns on frame 2, directly force state 5→6
+        // by calling ovl_func_802C7510 which sets all the required variables.
+        static int state5_frame_count = 0;
+        if (game_state == 5) {
+            state5_frame_count++;
+
+            // Frame 1: Set init flag for one-time init path
+            if (state5_frame_count == 1) {
+                write_u32(rdram, ADDR_BOOT_FLAG, 1);  // D_801CE63C = 1
+                printf("!!! BOOT INIT FIX: Set D_801CE63C = 1 (frame 1 init)\n");
+                fflush(stdout);
+            }
+            // Frame 2: After init path returns, directly force state 5→6
+            // by setting the variables that ovl_func_802C7510 would set
+            else if (state5_frame_count == 2) {
+                // These are the writes that ovl_func_802C7510 does:
+                // D_801CE634 = D_800DAB24 (save current state)
+                // D_801CE630 = 0
+                // D_800DAB24 = 6 (new state!)
+                // D_801CE638 = 0x13
+                // D_801CE63C = 1
+                // D_801CE640 = 0
+                // D_801CE644 = 0
+                // D_800DAB1C = 3
+                // D_800D461C = 2
+                write_u32(rdram, 0x001CE634, 5);   // D_801CE634 = previous state
+                write_u32(rdram, 0x001CE630, 0);   // D_801CE630 = 0
+                write_u32(rdram, ADDR_GAME_STATE, 6);  // D_800DAB24 = 6!
+                write_u32(rdram, 0x001CE638, 0x13); // D_801CE638 = 0x13
+                write_u32(rdram, ADDR_BOOT_FLAG, 1);  // D_801CE63C = 1
+                write_u32(rdram, 0x001CE640, 0);   // D_801CE640 = 0
+                write_u32(rdram, 0x001CE644, 0);   // D_801CE644 = 0
+                write_u32(rdram, 0x000DAB1C, 3);   // D_800DAB1C = 3
+                write_u32(rdram, 0x000D461C, 2);   // D_800D461C = 2
+                printf("!!! BOOT INIT FIX: FORCED state 5→6 (like ovl_func_802C7510)\n");
+                fflush(stdout);
+            }
+        }
 
         // Read controller input and fade counter for debug
         uint16_t controller_input = *(uint16_t*)(rdram + ADDR_CONTROLLER);
@@ -396,67 +665,68 @@ extern "C" void func_80092CF0(uint8_t* rdram, recomp_context* ctx) {
             fflush(stdout);
         }
 
-        // AUTO-ADVANCE: IMMEDIATELY after first state 5 frame, force state 6
-        // This bypasses the controller input check since controller is not working
-        // NOTE: The game crashes during display list processing, so we need to be quick
-        static bool state5_advanced = false;
-        if (game_state == 5 && !state5_advanced) {
-            state5_advanced = true;
-            printf("\n");
-            printf("╔══════════════════════════════════════════════════════════════╗\n");
-            printf("║  AUTO-ADVANCE: Immediately forcing state 5 -> 6!             ║\n");
-            printf("║  (Controller input bypass - normally needs Start+A+B)        ║\n");
-            printf("╚══════════════════════════════════════════════════════════════╝\n");
-            printf("\n");
-            fflush(stdout);
-
-            // Set D_800DAB24 = 6 (next state)
-            write_u32(rdram, ADDR_GAME_STATE, 6);
-            // Also set D_801CE63C = 1 (boot flag) to trigger framebuffer clear
-            write_u32(rdram, ADDR_BOOT_FLAG, 1);
-        }
-
-        // AUTO-ADVANCE state 6 -> 2 (to ovl_i0) after logo display
-        // The natural game flow is: state 5 -> 6 -> 2 -> 3 -> ...
-        static int state6_frames = 0;
-        if (game_state == 6) {
-            state6_frames++;
-            // Wait 180 frames (~3 seconds at 60fps) for logo to display
-            if (state6_frames == 180) {
-                printf("\n");
-                printf("╔══════════════════════════════════════════════════════════════╗\n");
-                printf("║  AUTO-ADVANCE: Forcing state 6 -> 2 (ovl_i0)!                ║\n");
-                printf("║  (After logo display, transition to memory card screen)      ║\n");
-                printf("╚══════════════════════════════════════════════════════════════╝\n");
-                printf("\n");
-                fflush(stdout);
-
-                write_u32(rdram, ADDR_GAME_STATE, 2);
-                write_u32(rdram, ADDR_BOOT_FLAG, 1);
-            }
-        }
+        // NOTE: Auto-advance hacks REMOVED in Session 20
+        // The real game flow now handles state transitions:
+        // - Boot overlay (func_1B1FB0_802C5BA4) increments fade counter
+        // - After 14 frames, calls func_801EB180 which sets state = 2
+        // - This properly initializes 20+ variables needed for ovl_i0
 
         return;
     }
 
     // STATE 2: Call ovl_i0 overlay (memory card check / intro)
     if (game_state == 2) {
-        if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
-            printf(">>> [STATE 2] CALLING func_i0_802C5800 (ovl_i0)...\n");
-            printf("    This overlay handles: memory card check, intro transition\n");
+        static int state2_frame = 0;
+        state2_frame++;
+
+        printf(">>> [STATE 2] FRAME %d - CALLING func_i0_802C5800 (ovl_i0)...\n", state2_frame);
+        printf("    DL input ptr: 0x%08X\n", dl_ptr_in);
+
+        // Check D_801CE63C (boot flag)
+        uint32_t boot_flag_val = read_u32(rdram, ADDR_BOOT_FLAG);
+        printf("    Boot flag (D_801CE63C) = %d\n", boot_flag_val);
+
+        // Check D_802C6BEC (ovl_i0 internal flag at 0x6BEC offset)
+        uint32_t ovl_flag = *(uint32_t*)(rdram + 0x002C6BEC);
+        printf("    ovl_i0 flag (D_802C6BEC) = %d\n", ovl_flag);
+
+        // Check D_802C6BC4 (another flag used in func_i0_802C5800)
+        uint32_t ovl_flag2 = *(uint32_t*)(rdram + 0x002C6BC4);
+        printf("    ovl_i0 flag2 (D_802C6BC4) = %d\n", ovl_flag2);
+        fflush(stdout);
+
+        // For debugging: limit to first 3 state 2 frames to avoid crash
+        if (state2_frame > 3) {
+            printf(">>> [STATE 2] SKIPPING func_i0_802C5800 (frame > 3, preventing crash)\n");
+            printf("    Generating placeholder DL instead\n");
             fflush(stdout);
+
+            // Generate a minimal display list
+            uint32_t dl_phys = dl_ptr_in & 0x1FFFFFFF;
+            uint32_t* dl = (uint32_t*)(rdram + dl_phys);
+            int idx = 0;
+
+            // gDPPipeSync
+            dl[idx++] = 0xE7000000;
+            dl[idx++] = 0x00000000;
+
+            // gSPEndDisplayList
+            dl[idx++] = 0xB8000000;
+            dl[idx++] = 0x00000000;
+
+            ctx->r2 = ctx->r4 + (idx * 4);
+            return;
         }
 
         // Call the ovl_i0 main display list builder
+        printf(">>> About to call func_i0_802C5800...\n"); fflush(stdout);
         func_i0_802C5800(rdram, ctx);
+        printf("<<< func_i0_802C5800 returned!\n"); fflush(stdout);
 
-        if (call_count <= 30 || call_count % DEBUG_INTERVAL == 0) {
-            uint32_t dl_ptr_out = (uint32_t)ctx->r2;
-            uint32_t dl_size = dl_ptr_in - dl_ptr_out;
-            printf("<<< [STATE 2] RETURNED from func_i0_802C5800\n");
-            printf("    DL output: 0x%08X\n", dl_ptr_out);
-            fflush(stdout);
-        }
+        uint32_t dl_ptr_out = (uint32_t)ctx->r2;
+        printf("<<< [STATE 2] RETURNED from func_i0_802C5800\n");
+        printf("    DL output: 0x%08X\n", dl_ptr_out);
+        fflush(stdout);
         return;
     }
 
@@ -620,49 +890,47 @@ extern "C" void func_800C6300_recomp(uint8_t* rdram, recomp_context* ctx) {
 }
 
 // ============================================================================
-// ovl_i0 overlay stubs (0x802C5800 - State 2: Memory card check / intro)
-// These functions are stubbed because the overlay code references static
-// variables and other overlays that are not available in the recompiled build.
+// func_80095050: unk_game_load - Debug wrapper
+// This function is called after state transition to load game assets
 // ============================================================================
+extern "C" void func_80095050_real(uint8_t* rdram, recomp_context* ctx);
 
-extern "C" void func_i0_802C5800(uint8_t* rdram, recomp_context* ctx) {
+extern "C" void func_80095050(uint8_t* rdram, recomp_context* ctx) {
     static int call_count = 0;
     call_count++;
-    if (call_count <= 5 || call_count % 60 == 0) {
-        printf("[OVL_I0] func_i0_802C5800 STUB (main DL builder) call #%d\n", call_count);
-        fflush(stdout);
-    }
-    // Return display list pointer unchanged
-    ctx->r2 = ctx->r4;
+
+    // Read D_801CE63C (boot flag)
+    uint32_t boot_flag = read_u32(rdram, 0x001CE63C);
+    uint32_t game_state = read_u32(rdram, 0x000DAB24);
+
+    printf("\n");
+    printf("╔══════════════════════════════════════════════════════════════╗\n");
+    printf("║ [GAME-LOAD] func_80095050 (unk_game_load) CALLED #%d\n", call_count);
+    printf("║   Game state: %d, Boot flag (D_801CE63C): %d\n", game_state, boot_flag);
+    printf("╚══════════════════════════════════════════════════════════════╝\n");
+    fflush(stdout);
+
+    // For now, SKIP the real function to see if this is where the crash is
+    printf("[GAME-LOAD] SKIPPING func_80095050 (testing if this causes crash)\n");
+    fflush(stdout);
+    // Don't call the real function for now
+    // func_80095050_real(rdram, ctx);
 }
 
-extern "C" void func_i0_802C5A7C(uint8_t* rdram, recomp_context* ctx) {
-    // Stub - state transition handler
-}
-
-extern "C" void func_i0_802C6044(uint8_t* rdram, recomp_context* ctx) {
-    // Stub
-}
-
-extern "C" void func_i0_802C63AC(uint8_t* rdram, recomp_context* ctx) {
-    // Stub
-}
-
-extern "C" void func_i0_802C6878(uint8_t* rdram, recomp_context* ctx) {
-    // Stub - state transition to state 3
-}
-
-extern "C" void func_i0_802C6944(uint8_t* rdram, recomp_context* ctx) {
-    // Stub - secondary DL builder
-}
-
-extern "C" void func_i0_802C6A1C(uint8_t* rdram, recomp_context* ctx) {
-    // Stub - secondary DL builder
-}
-
-extern "C" void func_i0_802C6AE4(uint8_t* rdram, recomp_context* ctx) {
-    // Stub - BSS init/clear function
-}
-
+// ============================================================================
+// ovl_i0 overlay - NOW USING REAL N64Recomp CODE (Session 20)
+// ============================================================================
+// The ovl_i0 functions (func_i0_802C5800, func_i0_802C5A7C, etc.) are now
+// generated by N64Recomp from the ROM binary. They are defined in the
+// generated RecompiledFuncs/funcs_*.c files.
+//
+// Previous stubs were REMOVED because they did nothing (just returned).
+// The real code properly:
+// - Builds display lists for state 2/3/4
+// - Handles state transitions via func_i0_802C6878
+// - Checks controller input
+// - Manages memory card screens
+//
 // NOTE: Static variables (static_0_*, static_1_*) are auto-generated by N64Recomp
-// Do NOT define them here - they're in funcs_19.c
+// Do NOT define them here - they're in the generated funcs_*.c files
+

@@ -6,6 +6,19 @@ Je bent een reverse engineering expert die werkt aan de Wave Race 64 N64 recompi
 
 Dit is een N64 game recompilatie project dat **N64Recomp** en **RT64** gebruikt om Wave Race 64 op moderne PC's te draaien. N64 games hebben vaak een complex overlay systeem waarbij verschillende code modules naar hetzelfde VRAM adres worden geladen afhankelijk van de game state.
 
+### Wat is N64Recomp?
+
+```
+N64Recomp = Tool die MIPS binary → C code vertaalt (statische recompiler)
+Recomp Project = Game-specifieke implementatie die N64Recomp gebruikt
+N64ModernRuntime = Runtime library voor OS emulatie + graphics (ultramodern + RT64)
+```
+
+**Kernprincipe:**
+```
+ROM (MIPS binary) → N64Recomp tool + config → C code (funcs_*.c) → Compiler → Native executable + runtime
+```
+
 ## Belangrijke Locaties
 
 ### Recompilatie Project
@@ -38,18 +51,29 @@ De `ovl_table.c` bevat `gOverlayTable[]` met alle 19 overlays en hun exacte:
 ### Documentatie
 - **Session docs:** `chris docs/hypotheses/SESSION_*.md`
 
+### Referentie Recomp Projects (voor onbekende patronen)
+```
+recompiled_games_use_these_for_info_and_reference_dont_makeup_ideas_analyse_these/
+├── dino-recomp/              # Dinosaur Planet - PI/DMA functies, 796 DLLs
+├── mk64recomp/               # Mario Kart 64 - Template voor dit project
+└── zelda64recomp-reference/  # Zelda OoT/MM - 574 overlays
+```
+**Gebruik:** Check deze projecten voor onbekende libultra functies of patterns.
+
 ## Je Workflow
 
 ### Stap 1: Lees de Documentatie
 
 **BELANGRIJK:** Lees ALTIJD deze documenten voordat je begint:
 
-1. **`chris docs/N64RECOMP_GUIDE.md`** - Essentiële referentie voor N64Recomp configuratie, stubs vs ignored, syms.toml format, etc.
-2. **Meest recente SESSION_*.md** - Zoek hoogste nummer:
+1. **`chris docs/hypotheses/CURRENT_TASKS.md`** - **START HIER!** Huidige status, prioriteiten, en wat er nog gedaan moet worden
+2. **`chris docs/LESSONS_LEARNED.md`** - Belangrijke lessen uit eerdere sessies (voorkom dezelfde fouten!)
+3. **`chris docs/N64RECOMP_GUIDE.md`** - Essentiële referentie voor N64Recomp configuratie, stubs vs ignored, syms.toml format, etc.
+4. **Meest recente SESSION_*.md** - Zoek hoogste nummer:
    ```bash
    ls -lt "chris docs/hypotheses/" | grep SESSION | head -5
    ```
-3. **`waverace-recomp/src/game/waverace_stubs.cpp`** - Huidige implementatie
+5. **`waverace-recomp/src/game/waverace_stubs.cpp`** - Huidige implementatie
 
 De sessie bestanden bevatten cumulatieve kennis. Lees minstens de laatste 2-3 sessies om te begrijpen waar het project staat.
 
@@ -61,36 +85,36 @@ De sessie bestanden bevatten cumulatieve kennis. Lees minstens de laatste 2-3 se
 
 ### Stap 2: Bouw en Test
 
-**BELANGRIJK:** Dit project wordt gebouwd via WSL (Windows Subsystem for Linux). De build instructies staan ook altijd in de meest recente SESSION_*.md zodat je direct kunt bouwen.
+**BELANGRIJK:** Dit project wordt gebouwd via WSL (Windows Subsystem for Linux).
+- LLM draait in Windows PowerShell/CMD context
+- Alle build commands MOETEN via `wsl bash -c "..."` wrapper
+- Zie `chris docs/MY_SETUP.md` voor gedetailleerde uitleg
 
-#### WSL Build
+#### WSL Build Commands (ALTIJD dit format gebruiken!)
 
 ```bash
-# Navigeer naar project (WSL path)
-cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp
+# Build (meest gebruikt) - output toont percentages
+wsl bash -c "cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp && cmake --build build -j 24"
 
-# Build (eerste keer - configure + build)
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j$(nproc)
-
-# Build (vervolg builds)
-cmake --build build -j$(nproc)
+# Clean rebuild (als configure nodig is)
+wsl bash -c "cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp && rm -rf build && cmake -B build -G Ninja && cmake --build build -j 24"
 ```
 
 #### N64Recomp (als je syms.toml of waverace.toml wijzigt)
 ```bash
-# Eerst N64Recomp draaien om C code te regenereren
-cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp
-../N64Recomp/build/N64Recomp waverace.toml
+wsl bash -c "cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp && ../N64Recomp/build/N64Recomp waverace.toml"
 ```
 
 #### Test
 ```bash
-# Vanuit waverace-recomp directory
-./build/WaveRace64Recompiled
+# Game runnen
+wsl bash -c "cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp && ./build/WaveRace64Recompiled"
 
-# Of met timeout voor automatische tests
-timeout 15 ./build/WaveRace64Recompiled 2>&1 | head -100
+# Met debug output
+wsl bash -c "cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp && ./build/WaveRace64Recompiled 2>&1 | head -500"
+
+# Met timeout voor automatische tests
+wsl bash -c "cd /mnt/c/Users/User/Documents/recompilations/wave-race-64-recomp-claude-code-opus45/waverace-recomp && timeout 15 ./build/WaveRace64Recompiled 2>&1 | head -100"
 ```
 
 ### Stap 3: Analyseer de Output
@@ -170,6 +194,27 @@ ignored = [
 ]
 ```
 
+### Typische Stub Functies
+
+**Hardware/MMIO Access (altijd stubben):**
+```toml
+stubs = [
+    "__osSpGetStatus", "__osSpSetStatus", "__osSpSetPc",
+    "__osDpGetStatus", "__osDpSetStatus",
+    "__osSiGetStatus", "__osSiRawStartDma",
+    "__osPiGetStatus", "__osPiRawStartDma",
+]
+```
+
+**Cache/COP0 Instructies:**
+```toml
+stubs = [
+    "osWritebackDCache", "osWritebackDCacheAll",
+    "osInvalDCache", "osInvalICache",
+    "__osSetCompare", "__osGetCause", "__osSetSR",
+]
+```
+
 ### Static variabelen
 
 N64Recomp genereert automatisch static variabelen (bijv. `static_0_80094088`) in de funcs_*.c bestanden. **Definieer deze NOOIT opnieuw** in waverace_stubs.cpp!
@@ -216,9 +261,80 @@ Games laden vaak verschillende overlays naar hetzelfde VRAM adres:
 
 Belangrijke GBI commands:
 - `0x06` - G_DL: Branch naar andere display list
-- `0xDC` - G_MOVEWORD: Set segment, matrix, etc.
+- `0xBC` - G_MOVEWORD: Set segment, matrix, etc.
 - `0xE7` - G_RDPPIPESYNC
 - `0xB8` - G_ENDDL: End display list
+
+## N64ModernRuntime Threading & Message Queues (KRITIEK)
+
+### Threading Architectuur
+
+De runtime heeft twee soorten threads:
+- **Game threads**: De originele N64 game threads (scheduler, main, etc.)
+- **Non-game threads**: Runtime threads zoals `gfx_thread`
+
+**KRITIEK**: Wanneer een non-game thread (zoals `gfx_thread`) een message stuurt via `osSendMesg()`, gaat die naar een **externe queue** in plaats van direct naar de N64 message queue.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    N64ModernRuntime Message Flow                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│  gfx_thread (NOT game thread)          Game Threads (scheduler, main)   │
+│       │                                       │                          │
+│  osSendMesg() ──┐                             │                          │
+│                 │ is_game_thread() = false    │                          │
+│                 ▼                             │                          │
+│  enqueue_external_message()            dequeue_external_messages()       │
+│                 │                             ▲                          │
+│                 └─────── external queue ──────┘                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Deadlock Scenario (Session 17)
+
+**Probleem**: Als een game thread blokkeert in `osRecvMesg()` wachtend op een message, en die message wordt gestuurd door de `gfx_thread`, kan een deadlock ontstaan:
+
+1. Game thread roept `osRecvMesg()` aan met `OS_MESG_BLOCK`
+2. Queue is leeg → thread gaat wachten in `do_recv()` loop
+3. `gfx_thread` stuurt SP/DP completion via `enqueue_external_message()`
+4. Maar `dequeue_external_messages()` wordt alleen aan BEGIN van `osRecvMesg()` aangeroepen
+5. **DEADLOCK**: Thread wacht op message die in external queue zit
+
+**De Fix** (in `lib/N64ModernRuntime/ultramodern/src/mesgqueue.cpp`):
+```cpp
+while (MQ_IS_EMPTY(mq)) {
+    ultramodern::thread_queue_insert(...);
+    ultramodern::run_next_thread_and_wait(PASS_RDRAM1);
+    // FIX: After waking up, drain external messages
+    dequeue_external_messages(PASS_RDRAM1);  // <-- ESSENTIEEL
+}
+```
+
+### SP/DP Completion Events
+
+De `gfx_thread` roept `sp_complete()` en `dp_complete()` aan:
+- **sp_complete()**: VOOR `send_dl()` - signaleert RSP klaar
+- **dp_complete()**: NA `send_dl()` - signaleert RDP klaar
+
+Games wachten op deze events via `osSetEventMesg(OS_EVENT_SP/DP, ...)`.
+
+### Runtime Componenten
+
+```
+N64ModernRuntime/
+├── librecomp/          # Core recompilation support
+│   ├── recomp.cpp      # Function dispatch
+│   ├── overlays.cpp    # Overlay loading
+│   └── sp.cpp          # osSpTaskLoad/StartGo
+│
+├── ultramodern/        # N64 OS emulatie
+│   ├── events.cpp      # VI/SP/DP events, gfx_thread
+│   ├── threads.cpp     # Thread scheduling
+│   ├── mesgqueue.cpp   # osRecvMesg/osSendMesg
+│   └── timer.cpp       # osGetTime etc
+│
+└── RT64/               # Graphics rendering (display list processing)
+```
 
 ## Debug Tips
 
@@ -268,6 +384,68 @@ De debug output is je ogen in de game. Hoe meer detail, hoe beter je kunt debugg
 | State blijft hangen | Game reageert niet | Debug state transition logic, evt. bypass |
 | Controller werkt niet | Input = 0 | Check controller stubs, SDL mapping |
 | Assets niet geladen | Black screen, crash | Check DMA loading, segment setup |
+| Game hangt na 2 frames | Scheduler blocked | Check external message queue deadlock (Session 17) |
+| "Failed to determine size of jump table" | N64Recomp error | VRAM adres in syms.toml is verkeerd |
+| "Unknown function at 0x801XXXXX" | N64Recomp error | Functie niet gedefinieerd in syms.toml |
+
+### N64Recomp Specifieke Errors
+
+**"Failed to determine size of jump table"**
+```toml
+# VERKEERD:
+vram = 0x801E0000
+
+# CORRECT (check decomp/disassembly):
+vram = 0x801DAFA0
+```
+
+**"Unknown function at 0x801XXXXX"**
+```toml
+# Voeg functie toe aan syms.toml:
+{ name = "func_801XXXXX", vram = 0x801XXXXX, size = 0xYY },
+```
+
+## BELANGRIJK: Sessie Documentatie
+
+**Voor AI/LLM modellen (Claude Code, etc.):**
+
+### 1. Maak een sessie doc na elke significante fix!
+
+Wanneer je een stap hebt gefixt (bijv. state transition werkt, crash opgelost, nieuwe functie geïmplementeerd):
+1. Maak direct een `SESSION_N_[BESCHRIJVING].md` aan
+2. Documenteer wat je gedaan hebt en waarom
+3. Dit zorgt ervoor dat kennis niet verloren gaat
+
+### 2. Context Limiet - Auto-Compact Protocol
+
+Wanneer je merkt dat de context vol begint te raken (je krijgt warnings over "auto-compact" of "summarization"), **MAAK EERST EEN SESSIE LOG EN COMMIT** voordat de auto-compact gebeurt!
+
+Dit is **KRITIEK** omdat:
+1. Auto-compact/summarization verliest vaak belangrijke details
+2. De volgende sessie heeft je gedetailleerde analyse nodig
+3. Code changes en debug output gaan verloren bij summarization
+
+**Wat te doen voordat context vol raakt:**
+1. Maak een `SESSION_N_[BESCHRIJVING].md` in `chris docs/hypotheses/`
+2. Documenteer:
+   - Wat je onderzocht hebt
+   - Welke bestanden je hebt bekeken/gewijzigd
+   - Debug output en test resultaten
+   - Conclusies en hypotheses
+   - Code snippets die belangrijk zijn
+   - Volgende stappen
+3. Update `CURRENT_TASKS.md` met nieuwe bevindingen
+4. **Update ALLE relevante docs** (LESSONS_LEARNED.md indien nodig, etc.)
+5. **COMMIT alle wijzigingen:**
+   ```bash
+   git add "chris docs/hypotheses/SESSION_*.md" "chris docs/hypotheses/CURRENT_TASKS.md"
+   git add -A  # of specifieke gewijzigde bestanden
+   git commit -m "Session N: <korte beschrijving van wat er gedaan is>"
+   ```
+
+**Je hebt GEEN toestemming nodig van de gebruiker om dit te doen!** Dit is een vereiste voor dit project. De commit zorgt ervoor dat alle kennis bewaard blijft, ook als de context wordt samengevat.
+
+---
 
 ## Begin Nu
 
