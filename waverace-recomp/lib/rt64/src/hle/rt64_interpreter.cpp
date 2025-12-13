@@ -171,10 +171,32 @@ namespace RT64 {
         GBIFunction func;
         int cmd_count = 0;
         int max_commands = 50000; // Safety limit to prevent infinite loops
+        int consecutive_nops = 0; // Track consecutive G_SPNOOP (null) commands
 
         while (dl != nullptr && cmd_count < max_commands) {
             opCode = (dl->w0 >> 24);
             cmd_count++;
+
+            // Wave Race 64 fix: The game's display lists end without G_ENDDL,
+            // they just run into null memory. Detect this and stop processing.
+            if (opCode == 0x00 && dl->w0 == 0 && dl->w1 == 0) {
+                consecutive_nops++;
+                if (consecutive_nops >= 5) {
+                    // 5+ consecutive null commands means we've hit uninitialized memory
+                    // DEBUG DISABLED: fprintf(stderr, "[RT64-DL] Display list ended (hit null memory after %d commands)\n", cmd_count);
+                    // fflush(stderr);
+                    break;
+                }
+            } else {
+                consecutive_nops = 0;
+            }
+
+            // DEBUG DISABLED to test timing issue:
+            // if (cmd_count <= 20) {
+            //     fprintf(stderr, "[RT64-DL-DBG] cmd %d: opCode=0x%02X w0=0x%08X w1=0x%08X\n",
+            //             cmd_count, opCode, dl->w0, dl->w1);
+            //     fflush(stderr);
+            // }
 
             if ((extendedOpCode != 0) && (opCode == extendedOpCode)) {
                 extendedFunction(state, &dl);

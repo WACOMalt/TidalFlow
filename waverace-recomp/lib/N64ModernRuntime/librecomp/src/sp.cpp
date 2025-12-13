@@ -78,45 +78,70 @@ static void fix_display_list(uint8_t* rdram, uint32_t data_ptr) {
     // +0x38: gSPSegment(14, ...)
     // +0x40: G_DL or other commands
 
+    // ==============================================================
+    // SEGMENT 8 FIX: The game sets segment 8 to 0x80316800 but this is WRONG
+    // ==============================================================
+    // During boot (state 5/6), the DMA loads assets to 0x802310A0.
+    // The DL uses segment 8 addresses like:
+    //   - G_DL to 0x08066180 (offset 0x66180 into segment 8)
+    //   - G_SETTIMG to 0x0804A460 (offset 0x4A460 into segment 8)
+    //
+    // If segment 8 = 0x80316800 (game's value), then:
+    //   - 0x80316800 + 0x66180 = 0x8037C980 (OUTSIDE DMA range!)
+    //
+    // If segment 8 = 0x801CAF20 (our calculated value), then:
+    //   - 0x801CAF20 + 0x66180 = 0x802310A0 (START of DMA data - correct!)
+    //
+    // Calculation: segment_8_base = DMA_dest - first_offset
+    //              segment_8_base = 0x802310A0 - 0x66180 = 0x801CAF20
     uint32_t segment_8_base = 0x801CAF20;
 
     // Scan the first ~10 commands looking for the segment 8 setup
-    // G_MOVEWORD format: w0 = 0xBC00XXYY where XX*4 = segment number
-    // For segment 8: offset = 8*4 = 0x20, so w0 = 0xBC002006
-    bool found_seg8 = false;
     for (int i = 0; i < 10; i++) {
         uint32_t w0 = dl[i*2];
         uint32_t w1 = dl[i*2 + 1];
 
-        // Check if this is G_MOVEWORD for segment 8
-        // w0 = 0xBC002006 means opcode=0xBC, offset=0x20 (segment 8), index=0x06 (G_MW_SEGMENT)
+        // Check if this is G_MOVEWORD for segment 8 (w0 = 0xBC002006)
         if (w0 == 0xBC002006) {
-            fprintf(stderr, "[DL-FIX] Frame %d: Found segment 8 at cmd %d, old value=0x%08X, new=0x%08X\n",
-                    fix_count, i, w1, segment_8_base);
-            dl[i*2 + 1] = segment_8_base;
-            found_seg8 = true;
+            // Only fix if different from our calculated value
+            if (w1 != segment_8_base) {
+                // DEBUG DISABLED: fprintf(stderr, "[DL-FIX] Frame %d: Fixing segment 8: 0x%08X -> 0x%08X\n", fix_count, w1, segment_8_base);
+                dl[i*2 + 1] = segment_8_base;
+            }
             break;
         }
     }
 
-    if (!found_seg8) {
-        fprintf(stderr, "[DL-FIX] Frame %d: WARNING - segment 8 command not found in first 10 commands!\n", fix_count);
-        // Dump first 10 commands for debugging
-        for (int i = 0; i < 10; i++) {
-            fprintf(stderr, "  [%d] w0=%08X w1=%08X\n", i, dl[i*2], dl[i*2+1]);
+    // ==============================================================
+    // FIX OTHER SEGMENTS: Some segment values are missing 0x80000000 prefix
+    // ==============================================================
+    // The DL has segment addresses like 0x00228E10 instead of 0x80228E10
+    // These need to be fixed or RT64 will crash accessing invalid memory
+    for (int i = 0; i < 10; i++) {
+        uint32_t w0 = dl[i*2];
+        uint32_t w1 = dl[i*2 + 1];
+
+        // Check if this is a G_MOVEWORD for segment setup (opcode 0xBC, index 0x06)
+        if ((w0 & 0xFF0000FF) == 0xBC000006) {
+            // Extract segment number from offset field: offset = segment * 4
+            uint32_t offset = (w0 >> 8) & 0xFF;
+            uint32_t segment = offset / 4;
+
+            // If the address looks like it's missing the 0x80000000 prefix
+            // (non-zero, but less than 0x80000000), add the prefix
+            if (w1 != 0 && w1 < 0x80000000) {
+                uint32_t fixed_addr = w1 | 0x80000000;
+                // DEBUG DISABLED: fprintf(stderr, "[DL-FIX] Frame %d: Fixing segment %d addr 0x%08X -> 0x%08X\n", fix_count, segment, w1, fixed_addr);
+                dl[i*2 + 1] = fixed_addr;
+            }
         }
     }
 
-    // Debug: dump the segment commands after fix
-    if (fix_count <= 3) {
-        fprintf(stderr, "[DL-FIX] DL at 0x%08X after fix (frame %d):\n", data_ptr, fix_count);
-        for (int i = 0; i < 8; i++) {
-            uint32_t w0 = dl[i*2];
-            uint32_t opcode = (w0 >> 24) & 0xFF;
-            fprintf(stderr, "  [%d] %08X %08X (opcode=0x%02X)\n", i, w0, dl[i*2+1], opcode);
-        }
-        fflush(stderr);
-    }
+    // Debug: dump the full display list (first 50 commands) - DISABLED for timing test
+    // if (fix_count <= 3) {
+    //     fprintf(stderr, "[DL-FIX] DL at 0x%08X after fix (frame %d):\n", data_ptr, fix_count);
+    //     // ... rest of debug code ...
+    // }
 }
 
 // Exported function to be called from events.cpp right before send_dl

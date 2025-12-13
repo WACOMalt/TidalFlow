@@ -132,12 +132,20 @@ namespace RT64 {
                 uint8_t seg_num = (*dl)->p0(10, 4);
                 uint32_t seg_val = (*dl)->w1;
 
+                // WAVE RACE DEBUG: Log segment 8 values - DISABLED for timing test
+                // static int seg_log_count = 0;
+                // if (seg_num == 8 && seg_log_count < 10) {
+                //     fprintf(stderr, "[RT64-SEG] Segment %d set to 0x%08X\n", seg_num, seg_val);
+                //     seg_log_count++;
+                // }
+
                 // WAVE RACE FIX: Override segment 8 with correct value
                 // The game sets segment 8 to 0x80316800 but assets are at 0x801CAF20
-                if (seg_num == 8 && seg_val != 0x801CAF20) {
+                // (calculated from DMA destination 0x802310A0 - first segment offset 0x66180)
+                if (seg_num == 8 && seg_val == 0x80316800) {
+                    // fprintf(stderr, "[RT64-SEG8-FIX] Segment 8: 0x%08X -> 0x801CAF20\n", seg_val);
                     seg_val = 0x801CAF20;
                 }
-
                 state->rsp->setSegment(seg_num, seg_val);
                 break;
             }
@@ -209,6 +217,19 @@ namespace RT64 {
             const uint8_t siz = (*dl)->p0(19, 2);
             const uint16_t width = (*dl)->p0(0, 12) + 1;
             const uint32_t address = (*dl)->w1;
+
+            // WAVE RACE DEBUG: Log texture image addresses - DISABLED for timing test
+            // static int tex_log_count = 0;
+            // if (tex_log_count < 30) {
+            //     uint8_t segment = (address >> 24) & 0x0F;
+            //     uint32_t offset = address & 0x00FFFFFF;
+            //     // fromSegmented converts seg:offset to physical address
+            //     uint32_t phys = state->rsp->fromSegmented(address);
+            //     fprintf(stderr, "[F3D-SETTIMG #%d] addr=0x%08X (seg %d + 0x%06X) -> phys=0x%08X\n",
+            //             tex_log_count, address, segment, offset, phys);
+            //     tex_log_count++;
+            // }
+
             state->rsp->setTextureImage(fmt, siz, width, address);
         }
 

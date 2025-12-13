@@ -296,9 +296,13 @@ functions = [
     { name = "func_800926F4", vram = 0x800926F4, size = 0x244 },
     { name = "func_80092938", vram = 0x80092938, size = 0x3B8 },
     { name = "func_80092CF0", vram = 0x80092CF0, size = 0x414 },
-    { name = "func_80093104", vram = 0x80093104, size = 0x2C0 },
+    { name = "func_80093104", vram = 0x80093104, size = 0x188 },
+    # func_8009328C - main rendering setup, called by overlays
+    { name = "func_8009328C", vram = 0x8009328C, size = 0x138 },
     { name = "func_800933C4", vram = 0x800933C4, size = 0x98 },
-    { name = "func_8009345C", vram = 0x8009345C, size = 0x960 },
+    { name = "func_8009345C", vram = 0x8009345C, size = 0x7E8 },
+    # func_80093C44 - clears framebuffer, called by ovl_i0 and other overlays
+    { name = "func_80093C44", vram = 0x80093C44, size = 0x178 },
     { name = "func_80093DBC", vram = 0x80093DBC, size = 0x1BC },
     { name = "func_80093F78", vram = 0x80093F78, size = 0x110 },
     { name = "func_80094200", vram = 0x80094200, size = 0x138 },
@@ -1077,6 +1081,32 @@ functions = [
     { name = "ovl_func_802C7578", vram = 0x802C7578, size = 0xE8 },
 ]
 
+# 0x802C Overlay - ovl_i0 (State 2 - Memory card check / intro)
+# From decomp: Wave-Race-64/src/overlays/ovl_i0/ovl_1B3EC0.c
+# ROM: 0x1B3EC0 - 0x1B55A0, VRAM: 0x802C5800 - 0x802C6F20
+[[section]]
+name = ".ovl_802C_ovl_i0"
+rom = 0x001B3EC0
+vram = 0x802C5800
+size = 0x16E0
+
+functions = [
+    # Main display list builder for state 2
+    { name = "func_i0_802C5800", vram = 0x802C5800, size = 0x27C },
+    # Large functions (from asm)
+    { name = "func_i0_802C5A7C", vram = 0x802C5A7C, size = 0x5C8 },
+    { name = "func_i0_802C6044", vram = 0x802C6044, size = 0x368 },
+    { name = "func_i0_802C63AC", vram = 0x802C63AC, size = 0x4CC },
+    # State transition function
+    { name = "func_i0_802C6878", vram = 0x802C6878, size = 0xCC },
+    # Secondary display list builder
+    { name = "func_i0_802C6944", vram = 0x802C6944, size = 0xD8 },
+    # State setter
+    { name = "func_i0_802C6A1C", vram = 0x802C6A1C, size = 0xC8 },
+    # Text/graphics function
+    { name = "func_i0_802C6AE4", vram = 0x802C6AE4, size = 0xDC },
+]
+
 # Other 0x802C overlay functions - declared but not defined (for other states)
 # These are in OTHER overlays that share the same VRAM address
 # Will be stubbed until those overlays are implemented
@@ -1084,7 +1114,6 @@ declared_funcs = [
     { name = "func_802C583C", vram = 0x802C583C },
     { name = "func_802C5924", vram = 0x802C5924 },
     { name = "func_802C5968", vram = 0x802C5968 },
-    { name = "func_802C5A7C", vram = 0x802C5A7C },
     { name = "func_802C5AE4", vram = 0x802C5AE4 },
     { name = "func_802C5B40", vram = 0x802C5B40 },
     { name = "func_802C5B4C", vram = 0x802C5B4C },
@@ -1095,7 +1124,6 @@ declared_funcs = [
     { name = "func_802C5D3C", vram = 0x802C5D3C },
     { name = "func_802C5F50", vram = 0x802C5F50 },
     { name = "func_802C5F6C", vram = 0x802C5F6C },
-    { name = "func_802C6944", vram = 0x802C6944 },
     { name = "func_802C7484", vram = 0x802C7484 },
     { name = "func_802C7D00", vram = 0x802C7D00 },
     { name = "func_802C913C", vram = 0x802C913C },

@@ -1,0 +1,53 @@
+# Build directories
+build/
+waverace-recomp/build/
+waverace-recomp/build-windows/
+N64Recomp/build/
+
+# ROM files (user must provide their own)
+*.z64
+*.n64
+*.v64
+rom/
+
+# Generated files
+waverace-recomp/RecompiledFuncs/
+
+# Python virtual environment
+splat_venv/
+__pycache__/
+*.pyc
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Reference projects (too large for git)
+recompiled_games_use_these_for_info_and_reference_dont_makeup_ideas_analyse_these/
+
+# Local documentation (moved to docs/)
+chris docs/
+
+# Assets extracted from ROM
+assets/
+asm/
+include/
+
+# Miscellaneous
+external_stubs.txt
+*.toml.new
