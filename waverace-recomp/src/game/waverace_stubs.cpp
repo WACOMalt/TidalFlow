@@ -695,30 +695,31 @@ extern "C" void func_80092CF0(uint8_t* rdram, recomp_context* ctx) {
         printf("    ovl_i0 flag2 (D_802C6BC4) = %d\n", ovl_flag2);
         fflush(stdout);
 
-        // For debugging: limit to first 3 state 2 frames to avoid crash
-        if (state2_frame > 3) {
-            printf(">>> [STATE 2] SKIPPING func_i0_802C5800 (frame > 3, preventing crash)\n");
-            printf("    Generating placeholder DL instead\n");
+        // For debugging: try to find the exact crash point
+        // Frame 4 crashes, let's see what's different
+        if (state2_frame == 4) {
+            printf(">>> [STATE 2] FRAME 4 - ATTEMPTING TO TRACE CRASH\n");
+            printf("    This is the crash frame - adding extra debug\n");
+
+            // Check D_801CE63C init flag - if 0, the init path is taken
+            uint32_t init_flag = *(uint32_t*)(rdram + 0x001CE63C);
+            printf("    D_801CE63C (init flag) = %d\n", init_flag);
+
+            // Check D_802C6BC4 - used to decide which path in func_i0_802C5800
+            uint32_t path_flag = *(uint32_t*)(rdram + 0x002C6BC4);
+            printf("    D_802C6BC4 (path flag) = %d\n", path_flag);
+
+            // Check D_802C6BEC - another control flag
+            uint32_t ctrl_flag = *(uint32_t*)(rdram + 0x002C6BEC);
+            printf("    D_802C6BEC (ctrl flag) = %d\n", ctrl_flag);
+
+            // Check D_80154344 - used in the init check
+            uint32_t init_check = *(uint32_t*)(rdram + 0x00154344);
+            printf("    D_80154344 (init check) = %d\n", init_check);
             fflush(stdout);
-
-            // Generate a minimal display list
-            uint32_t dl_phys = dl_ptr_in & 0x1FFFFFFF;
-            uint32_t* dl = (uint32_t*)(rdram + dl_phys);
-            int idx = 0;
-
-            // gDPPipeSync
-            dl[idx++] = 0xE7000000;
-            dl[idx++] = 0x00000000;
-
-            // gSPEndDisplayList
-            dl[idx++] = 0xB8000000;
-            dl[idx++] = 0x00000000;
-
-            ctx->r2 = ctx->r4 + (idx * 4);
-            return;
         }
 
-        // Call the ovl_i0 main display list builder
+        // Call the ovl_i0 main display list builder (NO workaround - testing real code)
         printf(">>> About to call func_i0_802C5800...\n"); fflush(stdout);
         func_i0_802C5800(rdram, ctx);
         printf("<<< func_i0_802C5800 returned!\n"); fflush(stdout);
@@ -915,6 +916,70 @@ extern "C" void func_80095050(uint8_t* rdram, recomp_context* ctx) {
     fflush(stdout);
     // Don't call the real function for now
     // func_80095050_real(rdram, ctx);
+}
+
+// ============================================================================
+// func_8008FB74: Main render display list builder (Session 26)
+// ============================================================================
+// This is a HUGE function (45K+ lines of assembly) that builds the game's
+// main display list for rendering. It was in the stubs list but that caused
+// a crash because the stub returned nothing while the caller expects a Gfx*.
+//
+// From decomp (code_4C750.c line 430):
+//   arg0 = func_8008FB74(arg0);  // Takes Gfx* in, returns updated Gfx* out
+//
+// The fix: Return the same pointer passed in (minimal no-op DL builder)
+// This allows the game to continue without crashing.
+// ============================================================================
+extern "C" void func_8008FB74(uint8_t* rdram, recomp_context* ctx) {
+    static int call_count = 0;
+    call_count++;
+
+    // a0 = input Gfx pointer (N64 address)
+    uint32_t gfx_in = (uint32_t)ctx->r4;
+
+    // Return the same pointer - SIGN EXTENDED for correct MEM_W operation
+    // N64 pointers (0x80xxxxxx) need sign extension to 0xFFFFFFFF80xxxxxx
+    ctx->r2 = (gpr)(int32_t)gfx_in;
+
+    // Debug output every 60 calls
+    if (call_count <= 5 || call_count % 60 == 0) {
+        printf("[RENDER-DL] func_8008FB74 #%d: gfx_in=0x%08X -> gfx_out=0x%016llX\n",
+               call_count, gfx_in, (unsigned long long)ctx->r2);
+        fflush(stdout);
+    }
+}
+
+// ============================================================================
+// func_8009328C: Main gameplay DL chain (Session 26)
+// ============================================================================
+// From decomp (code_4C750.c line 427-455):
+//   This function calls a chain of rendering subfunctions:
+//   - func_8008FB74, func_8006E674, func_800687A4, func_8007FFA8, etc.
+//
+// Many of these are in the stubs list and return nothing, breaking the chain.
+// This wrapper simply returns the input Gfx pointer to prevent crashes.
+//
+// CRITICAL: Return value must be sign-extended for MEM_W macro to work!
+// N64 pointers (0x80xxxxxx) need to be sign-extended to 0xFFFFFFFF80xxxxxx
+// ============================================================================
+extern "C" void func_8009328C(uint8_t* rdram, recomp_context* ctx) {
+    static int call_count = 0;
+    call_count++;
+
+    // a0 = input Gfx pointer (N64 address)
+    uint32_t gfx_in = (uint32_t)ctx->r4;
+
+    // Return the same pointer - SIGN EXTENDED for correct MEM_W operation
+    // Cast to int32_t first to get sign extension, then to gpr (int64_t)
+    ctx->r2 = (gpr)(int32_t)gfx_in;
+
+    // Debug output every 60 calls
+    if (call_count <= 5 || call_count % 60 == 0) {
+        printf("[RENDER-DL] func_8009328C #%d: gfx_in=0x%08X -> gfx_out=0x%016llX (sign-extended)\n",
+               call_count, gfx_in, (unsigned long long)ctx->r2);
+        fflush(stdout);
+    }
 }
 
 // ============================================================================

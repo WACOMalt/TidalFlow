@@ -51,7 +51,7 @@ stubs = [
     "func_8007AAAC",
     "func_80088EA8",
     "func_8008E794",
-    "func_8008FB74",
+    # NOTE: func_8008FB74 moved to 'ignored' - returns Gfx* ptr, needs custom impl (Session 26)
     "func_80090F58",
     "func_800916B4",
     "func_80097F74",
@@ -166,5 +166,7 @@ ignored = [
     "ovl_func_801E6A4C",  # BLOCKING - stubbed to test state transition (Session 24)
     "func_800C21F4",  # BLOCKING - audio/sound init, stubbed (Session 24)
     "func_80095050",  # unk_game_load - DEBUG wrapper (Session 25)
+    "func_8008FB74",  # Main render DL builder - returns Gfx*, needs proper return (Session 26)
+    "func_8009328C",  # Main gameplay DL chain - calls many broken stubs, needs wrapper (Session 26)
     # NOTE: ovl_i0 functions REMOVED from ignored - now using real N64Recomp code (Session 20)
 ]
