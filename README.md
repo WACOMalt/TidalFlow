@@ -3,6 +3,7 @@
 [![N64Recomp](https://img.shields.io/badge/Tool-N64Recomp-blue)](https://github.com/N64Recomp/N64Recomp)
 [![Game](https://img.shields.io/badge/Game-Wave%20Race%2064-green)](https://en.wikipedia.org/wiki/Wave_Race_64)
 [![AI Assisted](https://img.shields.io/badge/AI%20Assisted-Claude%20Code-orange)](https://claude.ai)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-7289DA)](https://discord.gg/WwVe4QUGrf)
 
 A static recompilation of **Wave Race 64** (N64, 1996) to native PC, using [N64Recomp](https://github.com/N64Recomp/N64Recomp) and [RT64](https://github.com/rt64/rt64). This project demonstrates **AI-assisted reverse engineering and recompilation** - showing how modern AI tools can help tackle complex low-level programming tasks.
 

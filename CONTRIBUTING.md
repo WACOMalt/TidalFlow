@@ -170,6 +170,7 @@ wave-race-64-recomp/
 
 ## Getting Help
 
+- **Discord**: [Join our Discord](https://discord.gg/WwVe4QUGrf) for real-time discussion
 - **Issues**: Open a GitHub issue
 - **Discussions**: Use GitHub Discussions for questions
 - **Session Logs**: Read `docs/sessions/` for context
