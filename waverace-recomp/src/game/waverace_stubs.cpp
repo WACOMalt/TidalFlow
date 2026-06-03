@@ -167,7 +167,7 @@ extern "C" uint64_t get_next_sequence() {
 
 // Forward declaration for ultramodern's send_si_message
 namespace ultramodern {
-    void send_si_message(uint8_t* rdram);
+    void send_si_message();
 }
 
 // libultra data symbols - these are variables, not functions
@@ -186,7 +186,7 @@ gpr get_entrypoint_address() {
 // We send SI completion message to unblock waiting threads
 extern "C" void __osSiRawStartDma_recomp(uint8_t* rdram, recomp_context* ctx) {
     // Send SI completion message - this unblocks osContInit and other SI waiting code
-    ultramodern::send_si_message(rdram);
+    ultramodern::send_si_message();
     ctx->r2 = 0;
 }
 

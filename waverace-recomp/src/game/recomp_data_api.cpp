@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "slot_map.h"
+#include "slot_map/slot_map.h"
 #include "recomp_data.h"
 #include "recomp_ui.h"
 #include "librecomp/helpers.hpp"

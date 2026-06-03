@@ -465,6 +465,11 @@ bool ModMenu::handle_special_config_options(const recomp::mods::ConfigOption& op
 
 void ModMenu::mod_configure_requested() {
     if (active_mod_index >= 0) {
+        if (config_sub_menu == nullptr) {
+            fprintf(stderr, "[UI] Warning: config_sub_menu is null, cannot configure mod\n");
+            return;
+        }
+
         // Record the context that was open when this function was called and close it.
         ContextId prev_context = recompui::get_current_context();
         prev_context.close();
@@ -590,9 +595,9 @@ void ModMenu::create_mod_list() {
     }
 
     Rml::ElementTabSet* tabset = recompui::get_config_tabset();
-    if (tabset && tabset->GetActiveTab() == recompui::config_tab_to_index(ConfigTab::Mods)) {
+    if (tabset != nullptr && tabset->GetActiveTab() == recompui::config_tab_to_index(ConfigTab::Mods)) {
         recompui::set_config_tabset_mod_nav();
-    }       
+    }
 
     // Add one extra spacer at the bottom.
     ModEntrySpacer *spacer = context.create_element<ModEntrySpacer>(list_scroll_container);
@@ -712,9 +717,21 @@ ModMenu::ModMenu(Element *parent) : Element(parent) {
     sub_menu_context = recompui::create_context(zelda64::get_asset_path("config_sub_menu.rml"));
     sub_menu_context.open();
     Rml::ElementDocument* sub_menu_doc = sub_menu_context.get_document();
-    Rml::Element* config_sub_menu_generic = sub_menu_doc->GetElementById("config_sub_menu");
-    ElementConfigSubMenu* config_sub_menu_element = rmlui_dynamic_cast<ElementConfigSubMenu*>(config_sub_menu_generic);
-    config_sub_menu = config_sub_menu_element->get_config_sub_menu_element();
+    if (sub_menu_doc != nullptr) {
+        Rml::Element* config_sub_menu_generic = sub_menu_doc->GetElementById("config_sub_menu");
+        if (config_sub_menu_generic != nullptr) {
+            ElementConfigSubMenu* config_sub_menu_element = rmlui_dynamic_cast<ElementConfigSubMenu*>(config_sub_menu_generic);
+            if (config_sub_menu_element != nullptr) {
+                config_sub_menu = config_sub_menu_element->get_config_sub_menu_element();
+            } else {
+                fprintf(stderr, "[UI] Warning: 'config_sub_menu' element is not an ElementConfigSubMenu type\n");
+            }
+        } else {
+            fprintf(stderr, "[UI] Warning: 'config_sub_menu' element not found in config_sub_menu.rml\n");
+        }
+    } else {
+        fprintf(stderr, "[UI] Warning: config_sub_menu document is null\n");
+    }
     sub_menu_context.close();
 
     context.open();
@@ -757,6 +774,9 @@ void process_game_started() {
 void set_config_tabset_mod_nav() {
     if (mod_menu) {
         Rml::ElementTabSet* tabset = recompui::get_config_tabset();
+        if (tabset == nullptr) {
+            return;
+        }
         Rml::Element* tabs = recompui::get_child_by_tag(tabset, "tabs");
         if (tabs != nullptr) {
             size_t num_children = tabs->GetNumChildren();
@@ -777,6 +797,9 @@ void set_config_tabset_mod_nav() {
 }
 
 void focus_mod_configure_button() {
+    if (mod_menu == nullptr) {
+        return;
+    }
     Element* configure_button = mod_menu->get_mod_configure_button();
     if (configure_button) {
         configure_button->focus();

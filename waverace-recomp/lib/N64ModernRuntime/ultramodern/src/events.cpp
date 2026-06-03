@@ -752,7 +752,8 @@ void ultramodern::submit_rsp_task(RDRAM_ARG PTR(OSTask) task_) {
     }
 }
 
-void ultramodern::send_si_message(RDRAM_ARG1) {
+void ultramodern::send_si_message() {
+    uint8_t* rdram = events_context.rdram;
     osSendMesg(PASS_RDRAM events_context.si.mq, events_context.si.msg, OS_MESG_NOBLOCK);
 }
 

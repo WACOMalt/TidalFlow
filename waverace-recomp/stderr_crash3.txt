@@ -1,0 +1,209 @@
+Failed to load controller mappings: Invalid RWops
+[DEBUG-VI-THREAD] Game not started yet (call #0), setting dummy VI
+[DEBUG-VI] update_vi() call #0: cur_state=0, cur_fb=0x00000000, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1), setting dummy VI
+[DEBUG-VI] update_vi() call #1: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2), setting dummy VI
+[DEBUG-VI] update_vi() call #2: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3), setting dummy VI
+[DEBUG-VI] update_vi() call #3: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4), setting dummy VI
+[DEBUG-VI] update_vi() call #4: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5), setting dummy VI
+[DEBUG-VI] update_vi() call #5: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #6), setting dummy VI
+[DEBUG-VI] update_vi() call #6: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #7), setting dummy VI
+[DEBUG-VI] update_vi() call #7: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #8), setting dummy VI
+[DEBUG-VI] update_vi() call #8: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #9), setting dummy VI
+[DEBUG-VI] update_vi() call #9: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI] update_vi() call #10: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI] update_vi() call #11: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI] update_vi() call #12: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI] update_vi() call #13: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI] update_vi() call #14: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI] update_vi() call #15: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI] update_vi() call #16: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI] update_vi() call #17: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI] update_vi() call #18: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI] update_vi() call #19: cur_state=1, cur_fb=0x80700000, next_fb=0x80725800, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #60), setting dummy VI
+[DEBUG-VI] update_vi() call #60: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #120), setting dummy VI
+[DEBUG-VI] update_vi() call #120: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #180), setting dummy VI
+[DEBUG-VI] update_vi() call #180: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #240), setting dummy VI
+[DEBUG-VI] update_vi() call #240: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #300), setting dummy VI
+[DEBUG-VI] update_vi() call #300: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #360), setting dummy VI
+[DEBUG-VI] update_vi() call #360: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #420), setting dummy VI
+[DEBUG-VI] update_vi() call #420: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #480), setting dummy VI
+[DEBUG-VI] update_vi() call #480: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #540), setting dummy VI
+[DEBUG-VI] update_vi() call #540: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #600), setting dummy VI
+[DEBUG-VI] update_vi() call #600: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #660), setting dummy VI
+[DEBUG-VI] update_vi() call #660: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #720), setting dummy VI
+[DEBUG-VI] update_vi() call #720: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #780), setting dummy VI
+[DEBUG-VI] update_vi() call #780: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #840), setting dummy VI
+[DEBUG-VI] update_vi() call #840: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #900), setting dummy VI
+[DEBUG-VI] update_vi() call #900: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #960), setting dummy VI
+[DEBUG-VI] update_vi() call #960: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1020), setting dummy VI
+[DEBUG-VI] update_vi() call #1020: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1080), setting dummy VI
+[DEBUG-VI] update_vi() call #1080: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1140), setting dummy VI
+[DEBUG-VI] update_vi() call #1140: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1200), setting dummy VI
+[DEBUG-VI] update_vi() call #1200: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1260), setting dummy VI
+[DEBUG-VI] update_vi() call #1260: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1320), setting dummy VI
+[DEBUG-VI] update_vi() call #1320: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1380), setting dummy VI
+[DEBUG-VI] update_vi() call #1380: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1440), setting dummy VI
+[DEBUG-VI] update_vi() call #1440: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1500), setting dummy VI
+[DEBUG-VI] update_vi() call #1500: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1560), setting dummy VI
+[DEBUG-VI] update_vi() call #1560: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1620), setting dummy VI
+[DEBUG-VI] update_vi() call #1620: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1680), setting dummy VI
+[DEBUG-VI] update_vi() call #1680: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1740), setting dummy VI
+[DEBUG-VI] update_vi() call #1740: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1800), setting dummy VI
+[DEBUG-VI] update_vi() call #1800: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1860), setting dummy VI
+[DEBUG-VI] update_vi() call #1860: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1920), setting dummy VI
+[DEBUG-VI] update_vi() call #1920: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #1980), setting dummy VI
+[DEBUG-VI] update_vi() call #1980: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2040), setting dummy VI
+[DEBUG-VI] update_vi() call #2040: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2100), setting dummy VI
+[DEBUG-VI] update_vi() call #2100: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2160), setting dummy VI
+[DEBUG-VI] update_vi() call #2160: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2220), setting dummy VI
+[DEBUG-VI] update_vi() call #2220: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2280), setting dummy VI
+[DEBUG-VI] update_vi() call #2280: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2340), setting dummy VI
+[DEBUG-VI] update_vi() call #2340: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2400), setting dummy VI
+[DEBUG-VI] update_vi() call #2400: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2460), setting dummy VI
+[DEBUG-VI] update_vi() call #2460: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2520), setting dummy VI
+[DEBUG-VI] update_vi() call #2520: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2580), setting dummy VI
+[DEBUG-VI] update_vi() call #2580: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2640), setting dummy VI
+[DEBUG-VI] update_vi() call #2640: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2700), setting dummy VI
+[DEBUG-VI] update_vi() call #2700: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2760), setting dummy VI
+[DEBUG-VI] update_vi() call #2760: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2820), setting dummy VI
+[DEBUG-VI] update_vi() call #2820: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2880), setting dummy VI
+[DEBUG-VI] update_vi() call #2880: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #2940), setting dummy VI
+[DEBUG-VI] update_vi() call #2940: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3000), setting dummy VI
+[DEBUG-VI] update_vi() call #3000: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3060), setting dummy VI
+[DEBUG-VI] update_vi() call #3060: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3120), setting dummy VI
+[DEBUG-VI] update_vi() call #3120: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3180), setting dummy VI
+[DEBUG-VI] update_vi() call #3180: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3240), setting dummy VI
+[DEBUG-VI] update_vi() call #3240: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3300), setting dummy VI
+[DEBUG-VI] update_vi() call #3300: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3360), setting dummy VI
+[DEBUG-VI] update_vi() call #3360: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3420), setting dummy VI
+[DEBUG-VI] update_vi() call #3420: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3480), setting dummy VI
+[DEBUG-VI] update_vi() call #3480: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3540), setting dummy VI
+[DEBUG-VI] update_vi() call #3540: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3600), setting dummy VI
+[DEBUG-VI] update_vi() call #3600: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3660), setting dummy VI
+[DEBUG-VI] update_vi() call #3660: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3720), setting dummy VI
+[DEBUG-VI] update_vi() call #3720: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3780), setting dummy VI
+[DEBUG-VI] update_vi() call #3780: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3840), setting dummy VI
+[DEBUG-VI] update_vi() call #3840: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3900), setting dummy VI
+[DEBUG-VI] update_vi() call #3900: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #3960), setting dummy VI
+[DEBUG-VI] update_vi() call #3960: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4020), setting dummy VI
+[DEBUG-VI] update_vi() call #4020: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4080), setting dummy VI
+[DEBUG-VI] update_vi() call #4080: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4140), setting dummy VI
+[DEBUG-VI] update_vi() call #4140: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4200), setting dummy VI
+[DEBUG-VI] update_vi() call #4200: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4260), setting dummy VI
+[DEBUG-VI] update_vi() call #4260: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4320), setting dummy VI
+[DEBUG-VI] update_vi() call #4320: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4380), setting dummy VI
+[DEBUG-VI] update_vi() call #4380: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4440), setting dummy VI
+[DEBUG-VI] update_vi() call #4440: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4500), setting dummy VI
+[DEBUG-VI] update_vi() call #4500: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4560), setting dummy VI
+[DEBUG-VI] update_vi() call #4560: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4620), setting dummy VI
+[DEBUG-VI] update_vi() call #4620: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4680), setting dummy VI
+[DEBUG-VI] update_vi() call #4680: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4740), setting dummy VI
+[DEBUG-VI] update_vi() call #4740: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4800), setting dummy VI
+[DEBUG-VI] update_vi() call #4800: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4860), setting dummy VI
+[DEBUG-VI] update_vi() call #4860: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4920), setting dummy VI
+[DEBUG-VI] update_vi() call #4920: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #4980), setting dummy VI
+[DEBUG-VI] update_vi() call #4980: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5040), setting dummy VI
+[DEBUG-VI] update_vi() call #5040: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5100), setting dummy VI
+[DEBUG-VI] update_vi() call #5100: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5160), setting dummy VI
+[DEBUG-VI] update_vi() call #5160: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5220), setting dummy VI
+[DEBUG-VI] update_vi() call #5220: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5280), setting dummy VI
+[DEBUG-VI] update_vi() call #5280: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0
+[DEBUG-VI-THREAD] Game not started yet (call #5340), setting dummy VI
+[DEBUG-VI] update_vi() call #5340: cur_state=0, cur_fb=0x80725800, next_fb=0x80700000, game_started=0

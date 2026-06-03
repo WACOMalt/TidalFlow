@@ -483,6 +483,10 @@ recompui::ContextId recompui::get_config_context_id() {
 // Helper copied from RmlUi to get a named child.
 Rml::Element* recompui::get_child_by_tag(Rml::Element* parent, const std::string& tag)
 {
+	if (parent == nullptr) {
+		return nullptr;
+	}
+
 	// Look for the existing child
 	for (int i = 0; i < parent->GetNumChildren(); i++)
 	{
@@ -504,6 +508,9 @@ class ConfigTabsetListener : public Rml::EventListener {
             }
             else {
                 Rml::ElementTabSet* tabset = recompui::get_config_tabset();
+                if (tabset == nullptr) {
+                    return;
+                }
                 Rml::Element* tabs = recompui::get_child_by_tag(tabset, "tabs");
                 if (tabs != nullptr) {
                     size_t num_children = tabs->GetNumChildren();
@@ -527,9 +534,14 @@ public:
 
     }
     void load_document() override {
-		config_context = recompui::create_context(zelda64::get_asset_path("config_menu.rml"));
+  config_context = recompui::create_context(zelda64::get_asset_path("config_menu.rml"));
         recompui::update_mod_list(false);
-        recompui::get_config_tabset()->AddEventListener(Rml::EventId::Tabchange, &config_tabset_listener);
+        Rml::ElementTabSet* tabset = recompui::get_config_tabset();
+        if (tabset != nullptr) {
+            tabset->AddEventListener(Rml::EventId::Tabchange, &config_tabset_listener);
+        } else {
+            fprintf(stderr, "[UI] Warning: config_tabset not found in config_menu.rml, tab change events will not work\n");
+        }
     }
     void register_events(recompui::UiEventListenerInstancer& listener) override {
         recompui::register_event(listener, "apply_options",
@@ -1046,7 +1058,12 @@ void recompui::toggle_fullscreen() {
 }
 
 void recompui::set_config_tab(ConfigTab tab) {
-    get_config_tabset()->SetActiveTab(config_tab_to_index(tab));
+    Rml::ElementTabSet* tabset = get_config_tabset();
+    if (tabset != nullptr) {
+        tabset->SetActiveTab(config_tab_to_index(tab));
+    } else {
+        fprintf(stderr, "[UI] Warning: Cannot set config tab - tabset element not found\n");
+    }
 }
 
 Rml::ElementTabSet* recompui::get_config_tabset() {
@@ -1055,13 +1072,27 @@ Rml::ElementTabSet* recompui::get_config_tabset() {
     ContextId old_context = recompui::try_close_current_context();
 
     Rml::ElementDocument *doc = config_context.get_document();
-    assert(doc != nullptr);
+    if (doc == nullptr) {
+        fprintf(stderr, "[UI] Warning: config document is null in get_config_tabset()\n");
+        if (old_context != ContextId::null()) {
+            old_context.open();
+        }
+        return nullptr;
+    }
 
     Rml::Element *tabset_el = doc->GetElementById("config_tabset");
-    assert(tabset_el != nullptr);
+    if (tabset_el == nullptr) {
+        fprintf(stderr, "[UI] Warning: 'config_tabset' element not found in config document\n");
+        if (old_context != ContextId::null()) {
+            old_context.open();
+        }
+        return nullptr;
+    }
 
     Rml::ElementTabSet *tabset = rmlui_dynamic_cast<Rml::ElementTabSet *>(tabset_el);
-    assert(tabset != nullptr);
+    if (tabset == nullptr) {
+        fprintf(stderr, "[UI] Warning: 'config_tabset' element is not a TabSet type\n");
+    }
 
     if (old_context != ContextId::null()) {
         old_context.open();
@@ -1076,10 +1107,18 @@ Rml::Element* recompui::get_mod_tab() {
     ContextId old_context = recompui::try_close_current_context();
 
     Rml::ElementDocument* doc = config_context.get_document();
-    assert(doc != nullptr);
+    if (doc == nullptr) {
+        fprintf(stderr, "[UI] Warning: config document is null in get_mod_tab()\n");
+        if (old_context != ContextId::null()) {
+            old_context.open();
+        }
+        return nullptr;
+    }
 
     Rml::Element* tab_el = doc->GetElementById("tab_mods");
-    assert(tab_el != nullptr);
+    if (tab_el == nullptr) {
+        fprintf(stderr, "[UI] Warning: 'tab_mods' element not found in config document\n");
+    }
 
     if (old_context != ContextId::null()) {
         old_context.open();
