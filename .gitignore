@@ -37,6 +37,11 @@ nul
 *.tmp
 *.bak
 
+# Test/debug output files
+stderr*.txt
+stdout*.txt
+crash_log.txt
+
 # Reference projects (too large for git)
 recompiled_games_use_these_for_info_and_reference_dont_makeup_ideas_analyse_these/
 

@@ -352,7 +352,7 @@ gpr get_entrypoint_address();
 // array of supported GameEntry objects
 std::vector<recomp::GameEntry> supported_games = {
     {
-        .rom_hash = 0x2B675E2250A604FC, // Wave Race 64 (Europe) - NWRE
+        .rom_hash = 0xD780F7DFD5B82CB5, // Wave Race 64 (Europe) - NWRE (XXH3-64)
         .internal_name = "WAVE RACE 64",
         .game_id = u8"waverace.eu",
         .mod_game_id = "waverace",
