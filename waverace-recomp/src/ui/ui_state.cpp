@@ -1,11 +1,13 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
-#include <SDL_video.h>
+#define RMLUI_SDL_VERSION_MAJOR 2
+#include <SDL.h>
 #else
-#include <SDL2/SDL_video.h>
+#include <SDL2/SDL.h>
 #endif
 #include <chrono>
 
+#include "common/rt64_plume.h"
 #include "rt64_render_hooks.h"
 
 #include "concurrentqueue.h"
@@ -180,12 +182,11 @@ public:
     UIState(UIState&& rhs) = delete;
     UIState& operator=(UIState&& rhs) = delete;
 
-    UIState(SDL_Window* window, RT64::RenderInterface* interface, RT64::RenderDevice* device) {
+    UIState(SDL_Window* window, RenderInterface* interface, RenderDevice* device) {
         launcher_menu_controller = recompui::create_launcher_menu();
         config_menu_controller = recompui::create_config_menu();
 
-        system_interface = std::make_unique<SystemInterface_SDL>();
-        system_interface->SetWindow(window);
+        system_interface = std::make_unique<SystemInterface_SDL>(window);
         render_interface.init(interface, device);
 
         launcher_menu_controller->register_events(event_listener_instancer);
@@ -195,9 +196,9 @@ public:
         Rml::SetRenderInterface(render_interface.get_rml_interface());
         Rml::Factory::RegisterEventListenerInstancer(&event_listener_instancer);
 
-        recompui::register_custom_elements();
-
         Rml::Initialise();
+
+        recompui::register_custom_elements();
         
         // Apply the hack to replace RmlUi's default color parser with one that conforms to HTML5 alpha parsing for SASS compatibility
         recompui::apply_color_hack();
@@ -446,7 +447,7 @@ inline const std::string read_file_to_string(std::filesystem::path path) {
     return ss.str(); 
 }
 
-void init_hook(RT64::RenderInterface* interface, RT64::RenderDevice* device) {
+void init_hook(RenderInterface* interface, RenderDevice* device) {
 #if defined(__linux__)
     std::locale::global(std::locale::classic());
 #endif
@@ -548,7 +549,7 @@ void recompui::activate_mouse() {
     ui_state->update_focus(true, false);
 }
 
-void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* swap_chain_framebuffer) {
+void draw_hook(RenderCommandList* command_list, RenderFramebuffer* swap_chain_framebuffer) {
 
     apply_background_input_mode();
 
@@ -693,12 +694,12 @@ void draw_hook(RT64::RenderCommandList* command_list, RT64::RenderFramebuffer* s
             // Send the event to RmlUi if this type of event is being captured.
             if (is_mouse_input) {
                 if (context_capturing_mouse) {
-                    RmlSDL::InputEventHandler(ui_state->context, cur_event);
+                    RmlSDL::InputEventHandler(ui_state->context, window, cur_event);
                 }
             }
             else {
                 if (context_capturing_input) {
-                    RmlSDL::InputEventHandler(ui_state->context, cur_event);
+                    RmlSDL::InputEventHandler(ui_state->context, window, cur_event);
                 }
             }
         }
