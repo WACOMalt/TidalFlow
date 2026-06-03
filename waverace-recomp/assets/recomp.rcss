@@ -1,0 +1,22 @@
+/* Wave Race 64 Recompiled - Base Stylesheet */
+/* Minimal stylesheet for RmlUi-based UI */
+
+body {
+    font-family: LatoLatin;
+    font-size: 16dp;
+    color: #ffffff;
+}
+
+div {
+    display: block;
+}
+
+button {
+    display: inline-block;
+    cursor: pointer;
+}
+
+#window {
+    width: 100%;
+    height: 100%;
+}

@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <fstream>
 
-#include "slot_map.h"
+#include "slot_map/slot_map.h"
 #include "RmlUi/Core/StreamMemory.h"
 
 #include "ultramodern/error_handling.hpp"
@@ -193,11 +193,24 @@ void recompui::init_styling(const std::filesystem::path& rcss_file) {
     std::string style{};
     {
         std::ifstream style_stream{rcss_file};
-        style_stream.seekg(0, std::ios::end);
-        style.resize(style_stream.tellg());
-        style_stream.seekg(0, std::ios::beg);
-
-        style_stream.read(style.data(), style.size());
+        if (!style_stream.is_open() || !style_stream.good()) {
+            fprintf(stderr, "[UI] Warning: Could not open stylesheet '%s', using empty stylesheet\n", rcss_file.string().c_str());
+            // Use an empty stylesheet rather than crashing
+            style = "/* empty stylesheet - asset file not found */";
+        }
+        else {
+            style_stream.seekg(0, std::ios::end);
+            auto file_size = style_stream.tellg();
+            if (file_size <= 0) {
+                fprintf(stderr, "[UI] Warning: Stylesheet '%s' is empty or unreadable\n", rcss_file.string().c_str());
+                style = "/* empty stylesheet */";
+            }
+            else {
+                style.resize(static_cast<size_t>(file_size));
+                style_stream.seekg(0, std::ios::beg);
+                style_stream.read(style.data(), style.size());
+            }
+        }
     }
     std::unique_ptr<Rml::StreamMemory> rml_stream = std::make_unique<Rml::StreamMemory>(reinterpret_cast<Rml::byte*>(style.data()), style.size());
     rml_stream->SetSourceURL(rcss_file.filename().string());
@@ -296,7 +309,7 @@ void recompui::destroy_all_contexts() {
         
         std::lock_guard context_lock{ ctx->context_lock };
         opened_context = ctx;
-        opened_context_id = ContextId{ key };
+        opened_context_id = ContextId{ key.raw };
 
         opened_context_id.clear_children();
 

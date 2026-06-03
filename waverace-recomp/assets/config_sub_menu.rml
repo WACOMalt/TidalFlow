@@ -1,0 +1,28 @@
+<rml>
+<head>
+    <title>Sub Menu</title>
+    <link type="text/rcss" href="recomp.rcss"/>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: LatoLatin;
+            font-size: 16dp;
+            color: #ffffff;
+        }
+        #window {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="window">
+        <div>Sub menu placeholder</div>
+    </div>
+</body>
+</rml>

@@ -1,0 +1,55 @@
+<rml>
+<head>
+    <title>Configuration</title>
+    <link type="text/rcss" href="recomp.rcss"/>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: LatoLatin;
+            font-size: 16dp;
+            color: #ffffff;
+        }
+        #window {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .title {
+            font-size: 24dp;
+            margin-bottom: 20dp;
+        }
+    </style>
+</head>
+<body data-model="graphics_model" data-event-keydown="config_keydown">
+    <div id="window" data-event-click="close_config_menu_backdrop">
+        <div class="title">Configuration</div>
+        <tabset id="config_tabset">
+            <tab>General</tab>
+            <panel>
+                <div>General settings placeholder</div>
+            </panel>
+            <tab>Controls</tab>
+            <panel>
+                <div>Controls settings placeholder</div>
+            </panel>
+            <tab>Graphics</tab>
+            <panel>
+                <div>Graphics settings placeholder</div>
+            </panel>
+            <tab>Sound</tab>
+            <panel>
+                <div>Sound settings placeholder</div>
+            </panel>
+            <tab>Mods</tab>
+            <panel>
+                <div>Mods placeholder</div>
+            </panel>
+        </tabset>
+        <button data-event-click="close_config_menu">Close</button>
+    </div>
+</body>
+</rml>

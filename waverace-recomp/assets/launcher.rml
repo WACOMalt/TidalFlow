@@ -1,0 +1,51 @@
+<rml>
+<head>
+    <title>Wave Race 64 Recompiled</title>
+    <link type="text/rcss" href="recomp.rcss"/>
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            font-family: LatoLatin;
+            font-size: 16dp;
+            color: #ffffff;
+        }
+        #window {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .title {
+            font-size: 32dp;
+            margin-bottom: 20dp;
+        }
+        .version {
+            font-size: 12dp;
+            color: #aaaaaa;
+            margin-bottom: 20dp;
+        }
+        .menu-button {
+            display: block;
+            padding: 10dp 30dp;
+            margin: 5dp;
+            font-size: 18dp;
+            cursor: pointer;
+            text-align: center;
+        }
+    </style>
+</head>
+<body data-model="launcher_model">
+    <div id="window">
+        <div class="title">Wave Race 64 Recompiled</div>
+        <div class="version" data-if="version_number">v{{version_number}}</div>
+        <button class="menu-button" data-if="mm_rom_valid" data-event-click="start_game">Start Game</button>
+        <button class="menu-button" data-event-click="select_rom">Select ROM</button>
+        <button class="menu-button" data-event-click="open_settings">Settings</button>
+        <button class="menu-button" data-event-click="open_controls">Controls</button>
+        <button class="menu-button" data-event-click="exit_game">Exit</button>
+    </div>
+</body>
+</rml>
