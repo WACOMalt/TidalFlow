@@ -166,6 +166,7 @@ ignored = [
     "ovl_func_801E6A4C",  # BLOCKING - stubbed to test state transition (Session 24)
     "func_800C21F4",  # BLOCKING - audio/sound init, stubbed (Session 24)
     "func_800C56F4",  # Audio msg queue init wrapper - stubbed because func_800C21F4 never inits the queue ptrs
+    "func_800BA100",  # Audio thread init - crashes because audio heap (func_800C21F4) is never initialized
     "func_80095050",  # unk_game_load - DEBUG wrapper (Session 25)
     "func_8008FB74",  # Main render DL builder - returns Gfx*, needs proper return (Session 26)
     "func_8009328C",  # Main gameplay DL chain - calls many broken stubs, needs wrapper (Session 26)

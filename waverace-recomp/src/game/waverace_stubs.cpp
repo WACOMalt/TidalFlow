@@ -244,6 +244,21 @@ extern "C" void func_800C21F4(uint8_t* rdram, recomp_context* ctx) {
 }
 
 // ============================================================================
+// func_800BA100: STUB - Audio thread init (Session 27)
+// Called by audio_thread (0x80047B20). This function initializes the audio
+// subsystem: allocates audio buffers via func_800B7760/func_800B7848, creates
+// message queues, and sets up the audio heap. Since func_800C21F4 (audio init)
+// is stubbed, the audio heap is never initialized, causing func_800B7760 to
+// return garbage pointers. The function then crashes at +0x582 trying to write
+// to address 0xFFFF0002 (a garbage pointer from the uninitialized allocator).
+// After func_800BA100 returns, audio_thread just blocks on osRecvMesg anyway.
+// ============================================================================
+extern "C" void func_800BA100(uint8_t* rdram, recomp_context* ctx) {
+    printf("[STUB] func_800BA100 - audio thread init skipped (audio heap not initialized)\n");
+    fflush(stdout);
+}
+
+// ============================================================================
 // func_800C56F4: STUB - Audio message queue init wrapper
 // Called by func_800BA100 (audio thread init). Normally calls func_800C52CC
 // which creates 4 OSMesgQueues using pointers from 0x800E85F8-0x800E8604.
