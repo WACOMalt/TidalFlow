@@ -244,6 +244,20 @@ extern "C" void func_800C21F4(uint8_t* rdram, recomp_context* ctx) {
 }
 
 // ============================================================================
+// func_800C56F4: STUB - Audio message queue init wrapper
+// Called by func_800BA100 (audio thread init). Normally calls func_800C52CC
+// which creates 4 OSMesgQueues using pointers from 0x800E85F8-0x800E8604.
+// Since func_800C21F4 (audio init) is stubbed, those pointers are never
+// initialized, causing osCreateMesgQueue to crash on garbage addresses.
+// Stubbing this prevents the crash while the audio thread safely blocks
+// on osRecvMesg in its main loop.
+// ============================================================================
+extern "C" void func_800C56F4(uint8_t* rdram, recomp_context* ctx) {
+    printf("[STUB] func_800C56F4 - audio msg queue init skipped (audio init was stubbed)\n");
+    fflush(stdout);
+}
+
+// ============================================================================
 // ovl_func_801E6A4C: STUB - Was blocking the state 6→2 transition (Session 24)
 // ============================================================================
 // This function appears to do menu/UI setup. With a0=0, a1=0 it should
